@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Znalostní Databáze - AI Asistent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>📚 Znalostní Databáze</h1>
+    <p class="text-muted">Vytvárej a spravuj znalostní záznamy, které AI asistent používá</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <button class="btn btn-success" data-bs-toggle="collapse" data-bs-target="#addEntryForm">
+                + Přidat nový záznam
+            </button>
+        </div>
+        <div class="col-md-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Hledej v databázi...">
+        </div>
+    </div>
+
+    <!-- Formulář pro přidání nového záznamu -->
+    <div class="collapse mb-4" id="addEntryForm">
+        <div class="card card-body bg-light">
+            <h5>Nový záznam</h5>
+            <form id="entryForm">
+                <div class="mb-3">
+                    <label class="form-label">Název *</label>
+                    <input type="text" class="form-control" id="entryTitle" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Obsah *</label>
+                    <textarea class="form-control" id="entryContent" rows="5" required></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Kategorie</label>
+                            <select class="form-control" id="entryCategory">
+                                <option value="">-- Vyber kategorii --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                                <option value="new">+ Nová kategorie...</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="newCategory" placeholder="Jméno nové kategorie" style="display:none;">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Tagy (oddělené čárkou)</label>
+                            <input type="text" class="form-control" id="entryTags" placeholder="např. procedura, knihovna">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Uložit záznam</button>
+                <button type="reset" class="btn btn-secondary">Vymazat</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filtry -->
+    <div class="mb-3">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary active" onclick="filterByCategory('')">Všechny</button>
+            {% for cat in categories %}
+            <button type="button" class="btn btn-outline-secondary" onclick="filterByCategory('{{ cat }}')">{{ cat }}</button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Seznam záznamů -->
+    <div id="entriesList" class="row">
+        {% for entry in entries %}
+        <div class="col-md-6 mb-3 knowledge-entry" data-category="{{ entry.category or '' }}" data-title="{{ entry.title.lower() }}">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ entry.title }}</h5>
+                    {% if entry.category %}
+                    <span class="badge bg-info mb-2">{{ entry.category }}</span>
+                    {% endif %}
+                    {% if entry.tags %}
+                    {% for tag in entry.tags.split(',') %}
+                    <span class="badge bg-light text-dark">{{ tag.strip() }}</span>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <p class="card-text mt-3">{{ entry.content[:150] }}...</p>
+                    
+                    <small class="text-muted">
+                        Vytvořeno: {{ entry.created_at.strftime('%d.%m.%Y %H:%M') }}<br>
+                        Autorem: {{ entry.created_by_user.name }}
+                    </small>
+                </div>
+                <div class="card-footer bg-light">
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewEntry({{ entry.id }})">Zobrazit</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteEntry({{ entry.id }})">Smazat</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not entries %}
+    <div class="alert alert-info">
+        <strong>Databáze je prázdná</strong><br>
+        Přidej první záznam pomocí formuláře výše. Všechny záznamy budou dostupné AI asistentovi.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal pro zobrazení detailu -->
+<div class="modal fade" id="entryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="entryModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="entryModalBody"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Přidání nového záznamu
+document.getElementById('entryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    let category = document.getElementById('entryCategory').value;
+    if (category === 'new') {
+        category = document.getElementById('newCategory').value;
+    }
+
+    const data = {
+        title: document.getElementById('entryTitle').value,
+        content: document.getElementById('entryContent').value,
+        category: category,
+        tags: document.getElementById('entryTags').value,
+        employee_id: 1 // TODO: Zařiď správného zaměstnance
+    };
+
+    fetch('{{ url_for("ai_assistant.knowledge_base") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert('Záznam byl uložen!');
+        location.reload();
+    })
+    .catch(err => alert('Chyba: ' + err));
+});
+
+// Hledání
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const search = e.target.value.toLowerCase();
+    document.querySelectorAll('.knowledge-entry').forEach(entry => {
+        const title = entry.getAttribute('data-title');
+        entry.style.display = title.includes(search) ? '' : 'none';
+    });
+});
+
+// Filtrování podle kategorie
+function filterByCategory(category) {
+    document.querySelectorAll('.knowledge-entry').forEach(entry => {
+        const entryCategory = entry.getAttribute('data-category');
+        entry.style.display = (category === '' || entryCategory === category) ? '' : 'none';
+    });
+}
+
+// Zobrazení detailu
+function viewEntry(id) {
+    fetch('{{ url_for("ai_assistant.api_knowledge") }}')
+        .then(r => r.json())
+        .then(entries => {
+            const entry = entries.find(e => e.id === id);
+            if (entry) {
+                document.getElementById('entryModalTitle').textContent = entry.title;
+                document.getElementById('entryModalBody').innerHTML = `
+                    <p><strong>Kategorie:</strong> ${entry.category || 'Neuvedena'}</p>
+                    <p><strong>Tagy:</strong> ${entry.tags.join(', ') || 'Neuvedeny'}</p>
+                    <hr>
+                    <p>${entry.content}</p>
+                `;
+                new bootstrap.Modal(document.getElementById('entryModal')).show();
+            }
+        });
+}
+
+// Smazání
+function deleteEntry(id) {
+    if (confirm('Opravdu chceš smazat tento záznam?')) {
+        // TODO: Implementuj endpoint pro smazání
+        alert('TODO: Implementovat smazání');
+    }
+}
+
+// Zobrazení input pole pro novou kategorii
+document.getElementById('entryCategory').addEventListener('change', function(e) {
+    const newCatInput = document.getElementById('newCategory');
+    newCatInput.style.display = e.target.value === 'new' ? '' : 'none';
+    if (e.target.value === 'new') {
+        newCatInput.focus();
+    }
+});
+</script>
+{% endblock %}

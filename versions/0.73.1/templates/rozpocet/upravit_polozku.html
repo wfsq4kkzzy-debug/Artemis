@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Upravit rozpočtovou položku{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">
+                <i class="fas fa-edit"></i> Upravit rozpočtovou položku
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <strong>Účet:</strong> {{ polozka.uctova_skupina.ucet }}/{{ polozka.analyticky_ucet }} - 
+                        {{ polozka.uctova_skupina.nazev }}
+                    </p>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.nazev.label(class="form-label") }}
+                            {{ form.nazev(class="form-control" + (" is-invalid" if form.nazev.errors else "")) }}
+                            {% if form.nazev.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.nazev.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.rozpocet.label(class="form-label") }}
+                            {{ form.rozpocet(class="form-control" + (" is-invalid" if form.rozpocet.errors else "")) }}
+                            <small class="form-text text-muted">Částka v Kč</small>
+                            {% if form.rozpocet.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.rozpocet.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.poznamka.label(class="form-label") }}
+                            {{ form.poznamka(class="form-control", rows="4") }}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('seznam_rozpoctu') }}" class="btn btn-secondary">
+                                Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

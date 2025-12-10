@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}{{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>{{ projekt.nazev }}</h1>
+            <p class="text-muted">{{ projekt.popis }}</p>
+            <div>
+                <span class="badge bg-info">Vedoucí: {{ projekt.vedouci or 'Není přiřazen' }}</span>
+                {% if projekt.status == 'planovani' %}
+                    <span class="badge bg-secondary">Plánování</span>
+                {% elif projekt.status == 'rozpracovani' %}
+                    <span class="badge bg-warning text-dark">Rozpracování</span>
+                {% elif projekt.status == 'ukonceny' %}
+                    <span class="badge bg-success">Ukončený</span>
+                {% else %}
+                    <span class="badge bg-danger">{{ projekt.status }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('projects.upravit', projekt_id=projekt.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-edit"></i> Upravit
+            </a>
+            <a href="{{ url_for('projects.seznam') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Rozpočet</h6>
+                    <h4>{{ "%.2f"|format(projekt.celkovy_rozpocet) }} Kč</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Vydaje</h6>
+                    <h4>{{ "%.2f"|format(projekt.celkove_vydaje) }} Kč</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Zbývá</h6>
+                    <h4 class="{% if projekt.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ "%.2f"|format(projekt.zbytek) }} Kč
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Čerpání</h6>
+                    {% set procento = (projekt.celkove_vydaje / projekt.celkovy_rozpocet * 100) if projekt.celkovy_rozpocet > 0 else 0 %}
+                    <h4>{{ "%.1f"|format(procento) }}%</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Levý panel - Správa projektu -->
+        <div class="col-md-5">
+            <div class="nav flex-column nav-pills" role="tablist">
+                <button class="nav-link active" id="tab-rozpocet" data-bs-toggle="pill" data-bs-target="#content-rozpocet" type="button" role="tab">
+                    <i class="fas fa-calculator"></i> Rozpočet
+                </button>
+                <button class="nav-link" id="tab-vydaje" data-bs-toggle="pill" data-bs-target="#content-vydaje" type="button" role="tab">
+                    <i class="fas fa-money-bill"></i> Výdaje
+                </button>
+                <button class="nav-link" id="tab-terminy" data-bs-toggle="pill" data-bs-target="#content-terminy" type="button" role="tab">
+                    <i class="fas fa-calendar"></i> Termíny
+                </button>
+                <button class="nav-link" id="tab-znalosti" data-bs-toggle="pill" data-bs-target="#content-znalosti" type="button" role="tab">
+                    <i class="fas fa-lightbulb"></i> Znalosti
+                </button>
+            </div>
+
+            <!-- ROZPOČET -->
+            <div class="tab-pane fade show active mt-3" id="content-rozpocet" role="tabpanel">
+                <h5>Rozpočtové položky</h5>
+                {% if budgets %}
+                    <div class="list-group">
+                        {% for b in budgets %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ b['popis'] }}</strong>
+                                <span class="badge bg-primary">{{ "%.2f"|format(b['castka']) }} Kč</span>
+                            </div>
+                            <small class="text-muted">{{ b['kategorie'] }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Žádné rozpočtové položky</p>
+                {% endif %}
+                <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}" class="btn btn-sm btn-primary mt-3 w-100">
+                    <i class="fas fa-plus"></i> Přidat položku
+                </a>
+            </div>
+
+            <!-- VÝDAJE -->
+            <div class="tab-pane fade mt-3" id="content-vydaje" role="tabpanel">
+                <h5>Poslední výdaje</h5>
+                {% if expenses %}
+                    <div class="list-group">
+                        {% for e in expenses[:5] %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ e['popis'] }}</strong>
+                                <span class="badge bg-warning">{{ "%.2f"|format(e['castka']) }} Kč</span>
+                            </div>
+                            <small class="text-muted">{{ e['datum'][:10] if e['datum'] else 'Bez data' }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Žádné výdaje</p>
+                {% endif %}
+                <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-sm btn-primary mt-3 w-100">
+                    <i class="fas fa-plus"></i> Přidat výdaj
+                </a>
+            </div>
+
+            <!-- TERMÍNY -->
+            <div class="tab-pane fade mt-3" id="content-terminy" role="tabpanel">
+                <h5>Termíny a milestony</h5>
+                {% if milestones %}
+                    <div class="list-group">
+                        {% for t in milestones %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ t['nazev'] }}</strong>
+                                {% if t['status'] == 'splneno' %}
+                                    <span class="badge bg-success">Splněno</span>
+                                {% elif t['status'] == 'zmeska' %}
+                                    <span class="badge bg-danger">Zmeška</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ t['status'] }}</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ t['datum_planovane'][:10] }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Žádné termíny</p>
+                {% endif %}
+                <a href="{{ url_for('projects.terminy', projekt_id=projekt.id) }}" class="btn btn-sm btn-primary mt-3 w-100">
+                    <i class="fas fa-plus"></i> Přidat termín
+                </a>
+            </div>
+
+            <!-- ZNALOSTI -->
+            <div class="tab-pane fade mt-3" id="content-znalosti" role="tabpanel">
+                <h5>Znalostní položky</h5>
+                {% if knowledge %}
+                    <div class="list-group">
+                        {% for z in knowledge[:5] %}
+                        <div class="list-group-item">
+                            <strong>{{ z['nazev'] }}</strong>
+                            <small class="text-muted d-block">{{ z['obsah'][:80] }}...</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Žádné znalosti</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pravý panel - AI Asistent -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot"></i> AI Asistent - {{ projekt.nazev }}
+                    </h5>
+                </div>
+                <div class="card-body" style="height: 600px; display: flex; flex-direction: column;">
+                    <!-- Chat history -->
+                    <div class="flex-grow-1 overflow-auto border rounded p-3 mb-3" id="chatMessages" style="background: #f8f9fa;">
+                        <div class="text-center text-muted mt-5">
+                            <p><strong>Vítej!</strong></p>
+                            <p>Jsem zde, abych ti pomohl se správou projektu {{ projekt.nazev }}.</p>
+                            <p>Ptej se mě na:</p>
+                            <ul class="list-unstyled">
+                                <li>Přidávání rozpočtu a výdajů</li>
+                                <li>Správě termínů</li>
+                                <li>Záznamu poznatků a znalostí</li>
+                                <li>Analýze čerpání rozpočtu</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Input area -->
+                    <div class="border-top pt-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="messageInput" placeholder="Napiš zprávu..." autocomplete="off">
+                            <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            Tokeny: <span id="tokenCount">0</span> | Projekt: <span id="projectId">{{ projekt.id }}</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const projectId = {{ projekt.id }};
+    const sessionId = Math.floor(Math.random() * 10000) + 1;
+    const employeeId = 1;
+
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        // Add user message to chat
+        const chatBox = document.getElementById('chatMessages');
+        const userMsg = document.createElement('div');
+        userMsg.className = 'mb-3';
+        userMsg.innerHTML = `
+            <div class="text-end">
+                <small class="badge bg-primary">${message}</small>
+            </div>
+        `;
+        chatBox.appendChild(userMsg);
+        input.value = '';
+        
+        try {
+            const response = await fetch('/ai/send-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: sessionId,
+                    employee_id: employeeId,
+                    projekt_id: projectId
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Add assistant response
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'mb-3';
+            assistantMsg.innerHTML = `
+                <small class="badge bg-secondary">${data.assistant_message}</small>
+            `;
+            chatBox.appendChild(assistantMsg);
+            
+            // Update token count
+            document.getElementById('tokenCount').textContent = data.tokens_used;
+            
+            // Auto-scroll
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Allow Enter key to send
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - {{ site_name }}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-book"></i> {{ site_name }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home"></i> Domů
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-project-diagram"></i> Projekty
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="projectsDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam') }}">Všechny projekty</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('projects.novy') }}">Nový projekt</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam', status='planovani') }}">V plánování</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam', status='rozpracovani') }}">V rozpracování</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam', status='ukonceny') }}">Ukončené</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('seznam_rozpoctu') }}">
+                            <i class="fas fa-list"></i> Rozpočet
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('seznam_lidi') }}">
+                            <i class="fas fa-users"></i> Personální agenda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai_assistant.index') }}">
+                            <i class="fas fa-robot"></i> AI Asistent
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-4 mt-5">
+        <div class="container">
+            <p class="text-muted mb-0">
+                &copy; 2024 Správa rozpočtu Městské knihovny Polička
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (volitelné) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

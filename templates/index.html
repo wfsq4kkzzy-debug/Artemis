@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Hlavní stránka{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-book"></i> Správa rozpočtu Knihovny Polička
+            </h1>
+            <p class="lead text-muted">Vítejte v systému pro správu rozpočtu, projektů a personální agendy</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Rozpočet -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-calculator fa-4x text-primary"></i>
+                    </div>
+                    <h3 class="card-title">Rozpočet</h3>
+                    <p class="card-text text-muted">
+                        Správa rozpočtových položek, výdajů a sledování čerpání rozpočtu
+                    </p>
+                    <a href="{{ url_for('seznam_rozpoctu') }}" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít rozpočet
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projekty -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-project-diagram fa-4x text-success"></i>
+                    </div>
+                    <h3 class="card-title">Projekty</h3>
+                    <p class="card-text text-muted">
+                        Správa projektů, rozpočtů, výdajů, termínů a znalostí
+                    </p>
+                    <a href="{{ url_for('projects.seznam') }}" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít projekty
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personální agenda -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-users fa-4x text-info"></i>
+                    </div>
+                    <h3 class="card-title">Personální agenda</h3>
+                    <p class="card-text text-muted">
+                        Správa zaměstnanců, brigádníků a osob na OON
+                    </p>
+                    <a href="{{ url_for('seznam_lidi') }}" class="btn btn-info btn-lg w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít personální agendu
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Asistent -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-robot fa-4x text-warning"></i>
+                    </div>
+                    <h3 class="card-title">AI Asistent</h3>
+                    <p class="card-text text-muted">
+                        Chat s AI asistentem pro pomoc a poradenství
+                    </p>
+                    <a href="{{ url_for('ai_assistant.index') }}" class="btn btn-warning btn-lg w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít AI asistenta
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard (přehled) -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-chart-line fa-4x text-danger"></i>
+                    </div>
+                    <h3 class="card-title">Přehled</h3>
+                    <p class="card-text text-muted">
+                        Dashboard s přehledem rozpočtu a statistikami
+                    </p>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-danger btn-lg w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít přehled
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

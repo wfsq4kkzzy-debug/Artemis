@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Služby - AI Asistent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>✅ Přehled poskytnutých služeb</h1>
+    <p class="text-muted">Záznamy o všech službách a akcích zaznamenávaných AI asistentem</p>
+
+    <div class="mb-4">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('ai_assistant.services') }}" class="btn btn-outline-secondary active">Všechny</a>
+            <a href="{{ url_for('ai_assistant.services', status='pending') }}" class="btn btn-outline-warning">Čekající</a>
+            <a href="{{ url_for('ai_assistant.services', status='completed') }}" class="btn btn-outline-success">Splněné</a>
+            <a href="{{ url_for('ai_assistant.services', status='cancelled') }}" class="btn btn-outline-danger">Zrušené</a>
+        </div>
+    </div>
+
+    {% if records.items %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Typ služby</th>
+                <th>Popis</th>
+                <th>Zaměstnanec</th>
+                <th>Stav</th>
+                <th>Vytvořeno</th>
+                <th>Splněno</th>
+                <th>Akce</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records.items %}
+            <tr>
+                <td><strong>{{ record.service_type }}</strong></td>
+                <td>{{ record.description[:50] }}...</td>
+                <td>{{ record.session.employee.name }}</td>
+                <td>
+                    {% if record.status == 'pending' %}
+                    <span class="badge bg-warning">Čekající</span>
+                    {% elif record.status == 'completed' %}
+                    <span class="badge bg-success">Splněná</span>
+                    {% else %}
+                    <span class="badge bg-danger">Zrušená</span>
+                    {% endif %}
+                </td>
+                <td>{{ record.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>
+                    {% if record.completed_at %}
+                    {{ record.completed_at.strftime('%d.%m.%Y %H:%M') }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewService({{ record.id }})">Detail</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginace -->
+    {% if records.pages > 1 %}
+    <nav>
+        <ul class="pagination">
+            {% if records.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('ai_assistant.services', page=records.prev_num) }}">Předchozí</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in records.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num == records.page %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('ai_assistant.services', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if records.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('ai_assistant.services', page=records.next_num) }}">Další</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info">
+        Žádné služby nejsou zaznamenány.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal pro detail služby -->
+<div class="modal fade" id="serviceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail služby</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="serviceModalBody">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewService(id) {
+    // TODO: Implementuj načítání detailu
+    alert('TODO: Detail služby');
+}
+</script>
+{% endblock %}

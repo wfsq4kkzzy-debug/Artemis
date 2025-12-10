@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="fas fa-chart-line"></i> Přehled rozpočtu {{ rok }}
+    </h1>
+
+    <!-- Souhrn -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-arrow-down"></i> Celkové náklady
+                    </h5>
+                    <p class="card-text h4">{{ "{:,.0f}".format(naklady_celkem) }} Kč</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-arrow-up"></i> Celkové výnosy
+                    </h5>
+                    <p class="card-text h4">{{ "{:,.0f}".format(vynos_celkem) }} Kč</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card {% if bilance >= 0 %}bg-info{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-balance-scale"></i> Bilance
+                    </h5>
+                    <p class="card-text h4">{{ "{:,.0f}".format(bilance) }} Kč</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <!-- NÁKLADY -->
+        <div class="col-lg-6">
+            <h3 class="text-danger mb-3">
+                <i class="fas fa-download"></i> Náklady
+            </h3>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-danger">
+                        <tr>
+                            <th>Účet</th>
+                            <th>Kategorie</th>
+                            <th class="text-end">Částka</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set naklady_soucet = 0 %}
+                        {% for skupina in skupiny_naklady %}
+                            {% set suma = namespace(value=0) %}
+                            {% for polozka in skupina.polozky %}
+                                {% if polozka.rok == rok %}
+                                    {% set suma.value = suma.value + polozka.rozpocet_float %}
+                                {% endif %}
+                            {% endfor %}
+                            <tr class="table-light">
+                                <td><strong>{{ skupina.ucet }}</strong></td>
+                                <td>
+                                    <a href="{{ url_for('seznam_rozpoctu', uctova_skupina=skupina.id) }}" class="text-decoration-none">
+                                        {{ skupina.nazev }}
+                                    </a>
+                                </td>
+                                <td class="text-end text-danger fw-bold">
+                                    {{ "{:,.0f}".format(suma.value) }} Kč
+                                </td>
+                            </tr>
+                            {% set naklady_soucet = naklady_soucet + suma.value %}
+                        {% endfor %}
+                        <tr class="table-danger">
+                            <td colspan="2"><strong>CELKEM NÁKLADY:</strong></td>
+                            <td class="text-end text-danger fw-bold">
+                                {{ "{:,.0f}".format(naklady_soucet) }} Kč
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VÝNOSY -->
+        <div class="col-lg-6">
+            <h3 class="text-success mb-3">
+                <i class="fas fa-upload"></i> Výnosy
+            </h3>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Účet</th>
+                            <th>Kategorie</th>
+                            <th class="text-end">Částka</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set vynos_soucet = 0 %}
+                        {% for skupina in skupiny_vynos %}
+                            {% set suma = namespace(value=0) %}
+                            {% for polozka in skupina.polozky %}
+                                {% if polozka.rok == rok %}
+                                    {% set suma.value = suma.value + polozka.rozpocet_float %}
+                                {% endif %}
+                            {% endfor %}
+                            <tr class="table-light">
+                                <td><strong>{{ skupina.ucet }}</strong></td>
+                                <td>
+                                    <a href="{{ url_for('seznam_rozpoctu', uctova_skupina=skupina.id) }}" class="text-decoration-none">
+                                        {{ skupina.nazev }}
+                                    </a>
+                                </td>
+                                <td class="text-end text-success fw-bold">
+                                    {{ "{:,.0f}".format(suma.value) }} Kč
+                                </td>
+                            </tr>
+                            {% set vynos_soucet = vynos_soucet + suma.value %}
+                        {% endfor %}
+                        <tr class="table-success">
+                            <td colspan="2"><strong>CELKEM VÝNOSY:</strong></td>
+                            <td class="text-end text-success fw-bold">
+                                {{ "{:,.0f}".format(vynos_soucet) }} Kč
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('seznam_rozpoctu') }}" class="btn btn-primary">
+            <i class="fas fa-list"></i> Podrobný seznam rozpočtu
+        </a>
+    </div>
+</div>
+{% endblock %}

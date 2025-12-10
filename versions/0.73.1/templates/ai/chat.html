@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat - AI Asistent{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row h-100">
+        <!-- Sidebar se relacemi -->
+        <div class="col-md-3 border-end">
+            <h5>Konverzace</h5>
+            <button class="btn btn-primary btn-sm w-100 mb-3" onclick="newChat()">+ Nová konverzace</button>
+            
+            <div id="sessionList" class="list-group">
+                {% for session in sessions %}
+                <a href="#" class="list-group-item list-group-item-action" 
+                   onclick="loadSession({{ session.id }})">
+                    <strong>{{ session.title[:30] }}</strong>
+                    <small class="text-muted d-block">{{ session.updated_at.strftime('%d.%m. %H:%M') }}</small>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Hlavní chat -->
+        <div class="col-md-9">
+            <div class="d-flex flex-column h-100">
+                <h4>Chat s {{ employee.name }} ({{ employee.role }})</h4>
+                <hr>
+
+                <!-- Zprávy -->
+                <div id="chatMessages" class="flex-grow-1 overflow-auto mb-3" style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
+                    <!-- Zprávy se načítají zde -->
+                </div>
+
+                <!-- Input -->
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="form-control" placeholder="Napiš zprávu...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Odeslat</button>
+                </div>
+                <small class="text-muted mt-2">Tokeny: <span id="tokenCount">0</span></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentSessionId = null;
+const employeeId = {{ employee.id }};
+
+// Načti zprávy ze relace
+function loadSession(sessionId) {
+    currentSessionId = sessionId;
+    fetch(`{{ url_for('ai_assistant.api_session_messages', session_id=0) }}`.replace('0', sessionId))
+        .then(r => r.json())
+        .then(messages => {
+            let html = '';
+            messages.forEach(msg => {
+                const isUser = msg.role === 'user';
+                const alignment = isUser ? 'justify-content-end' : 'justify-content-start';
+                const bgClass = isUser ? 'bg-primary text-white' : 'bg-light';
+                
+                html += `
+                    <div class="d-flex ${alignment} mb-3">
+                        <div class="alert ${bgClass} max-width-70">
+                            ${msg.content}
+                            <small class="text-muted d-block">${new Date(msg.created_at).toLocaleTimeString('cs-CZ')}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('chatMessages').innerHTML = html;
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        });
+}
+
+// Pošli zprávu
+function sendMessage() {
+    const message = document.getElementById('messageInput').value.trim();
+    if (!message) return;
+
+    document.getElementById('messageInput').value = '';
+    
+    // Zobraz loading
+    document.getElementById('chatMessages').innerHTML += `
+        <div class="d-flex justify-content-start mb-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Čekání...</span>
+            </div>
+        </div>
+    `;
+
+    fetch('{{ url_for("ai_assistant.chat", employee_id=0) }}'.replace('0', employeeId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: currentSessionId,
+            message: message
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        currentSessionId = data.session_id;
+        
+        // Přidej zprávy do chatu
+        document.getElementById('chatMessages').innerHTML = '';
+        loadSession(currentSessionId);
+        
+        document.getElementById('tokenCount').textContent = data.tokens_used;
+        
+        // Obnov seznam relací
+        location.reload(); // Jednodušší řešení
+    })
+    .catch(err => {
+        alert('Chyba: ' + err);
+        document.getElementById('messageInput').value = message;
+    });
+}
+
+// Nová konverzace
+function newChat() {
+    currentSessionId = null;
+    document.getElementById('chatMessages').innerHTML = '<p class="text-muted">Nová konverzace. Napiš první zprávu.</p>';
+    document.getElementById('messageInput').focus();
+}
+
+// Odesílání na Enter
+document.getElementById('messageInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// Načti první relaci
+if ({{ sessions|length }} > 0) {
+    loadSession({{ sessions[0].id }});
+}
+</script>
+
+<style>
+.max-width-70 {
+    max-width: 70%;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}

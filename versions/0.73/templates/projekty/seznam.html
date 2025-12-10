@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Projekty{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-project-diagram"></i> Všechny projekty
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.novy') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Nový projekt
+            </a>
+        </div>
+    </div>
+
+    {% if projekty %}
+    <div class="row">
+        {% for projekt in projekty %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" style="text-decoration: none; color: inherit;">
+                            {{ projekt.nazev }}
+                        </a>
+                    </h5>
+                    
+                    <p class="card-text text-muted">{{ projekt.popis[:100] if projekt.popis else 'Bez popisu' }}...</p>
+                    
+                    <div class="mb-3">
+                        {% if projekt.status == 'planovani' %}
+                            <span class="badge bg-secondary">Plánování</span>
+                        {% elif projekt.status == 'rozpracovani' %}
+                            <span class="badge bg-warning text-dark">Rozpracování</span>
+                        {% elif projekt.status == 'ukonceny' %}
+                            <span class="badge bg-success">Ukončený</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ projekt.status }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="small text-muted mb-3">
+                        <div>Vedoucí: <strong>{{ projekt.vedouci or 'Není přiřazen' }}</strong></div>
+                        <div>Vytvořeno: <strong>{{ projekt.datum_vytvoreni.strftime('%d.%m.%Y') }}</strong></div>
+                    </div>
+                    
+                    <div class="progress mb-3">
+                        {% set procento = (projekt.celkove_vydaje / projekt.celkovy_rozpocet * 100) if projekt.celkovy_rozpocet > 0 else 0 %}
+                        <div class="progress-bar" style="width: {{ procento }}%">
+                            {{ "%.1f"|format(procento) }}%
+                        </div>
+                    </div>
+                    
+                    <div class="small mb-3">
+                        <div>Rozpočet: <strong>{{ "%.2f"|format(projekt.celkovy_rozpocet) }} Kč</strong></div>
+                        <div>Vydaje: <strong>{{ "%.2f"|format(projekt.celkove_vydaje) }} Kč</strong></div>
+                        <div>Zbývá: <strong class="{% if projekt.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">{{ "%.2f"|format(projekt.zbytek) }} Kč</strong></div>
+                    </div>
+                    
+                    <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-eye"></i> Otevřít
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> Zatím nemáte žádné projekty.
+        <a href="{{ url_for('projects.novy') }}" class="btn btn-sm btn-primary ms-2">Vytvořit první projekt</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

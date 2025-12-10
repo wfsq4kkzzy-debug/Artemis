@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Personální agenda{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-users"></i> Personální agenda
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('pridat_cloveka') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Přidat osobu
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtry -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label for="typ" class="form-label">Typ</label>
+                    <select name="typ" id="typ" class="form-select">
+                        <option value="">-- Všechny --</option>
+                        <option value="zamestnanec" {% if typ_filter == 'zamestnanec' %}selected{% endif %}>Zaměstnanci</option>
+                        <option value="brigadnik" {% if typ_filter == 'brigadnik' %}selected{% endif %}>Brigádníci</option>
+                        <option value="oon" {% if typ_filter == 'oon' %}selected{% endif %}>OON</option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Filtrovat
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Seznam -->
+    {% if lide %}
+        <div class="row">
+            {% for clovek in lide %}
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ clovek.jmeno_plne }}</h5>
+                            <p class="card-text">
+                                <strong>Typ:</strong>
+                                {% if clovek.typ == 'zamestnanec' %}
+                                    <span class="badge bg-primary">Zaměstnanec</span>
+                                {% elif clovek.typ == 'brigadnik' %}
+                                    <span class="badge bg-info">Brigádník</span>
+                                {% else %}
+                                    <span class="badge bg-warning">OON</span>
+                                {% endif %}
+                            </p>
+                            {% if clovek.pozice %}
+                                <p class="card-text">
+                                    <strong>Pozice:</strong> {{ clovek.pozice }}
+                                </p>
+                            {% endif %}
+                            {% if clovek.uvazek %}
+                                <p class="card-text">
+                                    <strong>Úvazek:</strong> {{ clovek.uvazek }} %
+                                </p>
+                            {% endif %}
+                            {% if clovek.mesicni_plat %}
+                                <p class="card-text">
+                                    <strong>Měsíční plat:</strong> {{ "{:,.0f}".format(clovek.mesicni_plat) }} Kč
+                                </p>
+                            {% endif %}
+                            {% if clovek.hodinova_sazba %}
+                                <p class="card-text">
+                                    <strong>Hodinová sazba:</strong> {{ "{:,.0f}".format(clovek.hodinova_sazba) }} Kč
+                                </p>
+                            {% endif %}
+                        <div class="card-footer mt-auto">
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('upravit_cloveka', zamestnanec_id=clovek.id) }}" class="btn btn-sm btn-warning flex-grow-1">
+                                    <i class="fas fa-edit"></i> Upravit
+                                </a>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Žádné osoby nenalezeny.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

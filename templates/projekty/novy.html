@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Nový projekt{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <h1>Vytvořit nový projekt</h1>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="nazev" class="form-label">Název projektu *</label>
+                    <input type="text" class="form-control" id="nazev" name="nazev" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="popis" class="form-label">Popis</label>
+                    <textarea class="form-control" id="popis" name="popis" rows="4"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="vedouci" class="form-label">Vedoucí projektu</label>
+                    <input type="text" class="form-control" id="vedouci" name="vedouci">
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('projects.seznam') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Vytvořit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Výdaje - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Výdaje: {{ projekt.nazev }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Přidat nový výdaj</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="alert alert-info">
+                            <small><i class="fas fa-info-circle"></i> Výdaje lze přidat pouze do kategorií, které existují v rozpočtu. Nejdříve <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}">přidejte rozpočtové položky</a>.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="kategorie" class="form-label">Kategorie <span class="text-danger">*</span></label>
+                            <select class="form-select" id="kategorie" name="kategorie" required>
+                                <option value="">-- Vyberte kategorii --</option>
+                                {% if budgets %}
+                                    {% set kategorii = [] %}
+                                    {% for b in budgets %}
+                                        {% if b['kategorie'] not in kategorii %}
+                                            <option value="{{ b['kategorie'] }}">{{ b['kategorie'] }}</option>
+                                            {% if kategorii.append(b['kategorie']) %}{% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" disabled>Nejdříve přidejte rozpočtové položky</option>
+                                {% endif %}
+                            </select>
+                            <small class="form-text text-muted">Vyberte kategorii ze seznamu rozpočtovaných položek</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis výdaje</label>
+                            <input type="text" class="form-control" id="popis" name="popis" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="castka" class="form-label">Částka (Kč)</label>
+                            <input type="number" class="form-control" id="castka" name="castka" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cis_faktury" class="form-label">Číslo faktury</label>
+                            <input type="text" class="form-control" id="cis_faktury" name="cis_faktury">
+                        </div>
+                        <div class="mb-3">
+                            <label for="dodavatel" class="form-label">Dodavatel</label>
+                            <input type="text" class="form-control" id="dodavatel" name="dodavatel">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Přidat výdaj
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Přehled výdajů</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Rozpočet:</strong> {{ "%.2f"|format(projekt.celkovy_rozpocet) }} Kč<br>
+                        <strong>Vydaje:</strong> {{ "%.2f"|format(projekt.celkove_vydaje) }} Kč<br>
+                        <strong>Zbývá:</strong> <span class="{% if projekt.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">{{ "%.2f"|format(projekt.zbytek) }} Kč</span>
+                    </div>
+
+                    {% if expenses %}
+                        <div class="list-group">
+                            {% for e in expenses %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ e.popis }}</h6>
+                                        <small class="text-muted">{{ e.datum[:10] }}</small>
+                                    </div>
+                                    <span class="badge bg-warning">{{ "%.2f"|format(e.castka) }} Kč</span>
+                                </div>
+                                {% if e.dodavatel %}
+                                    <small class="text-muted">{{ e.dodavatel }}</small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím žádné výdaje</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

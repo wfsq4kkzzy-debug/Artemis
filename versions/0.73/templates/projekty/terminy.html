@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Termíny - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Termíny a milestony: {{ projekt.nazev }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Přidat nový termín</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="nazev" class="form-label">Název termínu</label>
+                            <input type="text" class="form-control" id="nazev" name="nazev" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="datum_planovane" class="form-label">Plánovaný termín</label>
+                            <input type="date" class="form-control" id="datum_planovane" name="datum_planovane" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis</label>
+                            <textarea class="form-control" id="popis" name="popis" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="zodpovedny" class="form-label">Zodpovědný</label>
+                            <input type="text" class="form-control" id="zodpovedny" name="zodpovedny">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Přidat termín
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Termíny projektu</h5>
+                </div>
+                <div class="card-body">
+                    {% if milestones %}
+                        <div class="list-group">
+                            {% for m in milestones %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ m.nazev }}</h6>
+                                        <small class="text-muted">{{ m.datum_planovane[:10] }}</small>
+                                    </div>
+                                    {% if m.status == 'splneno' %}
+                                        <span class="badge bg-success">Splněno</span>
+                                    {% elif m.status == 'zmeska' %}
+                                        <span class="badge bg-danger">Zmeška</span>
+                                    {% elif m.status == 'probihajici' %}
+                                        <span class="badge bg-warning text-dark">Probíhá</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Plánováno</span>
+                                    {% endif %}
+                                </div>
+                                {% if m.popis %}
+                                    <small class="text-muted d-block mt-2">{{ m.popis }}</small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím žádné termíny</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

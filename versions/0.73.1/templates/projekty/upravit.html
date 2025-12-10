@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Upravit projekt{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <h1>Upravit projekt: {{ projekt.nazev }}</h1>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="nazev" class="form-label">Název projektu *</label>
+                    <input type="text" class="form-control" id="nazev" name="nazev" value="{{ projekt.nazev }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="popis" class="form-label">Popis</label>
+                    <textarea class="form-control" id="popis" name="popis" rows="4">{{ projekt.popis or '' }}</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="vedouci" class="form-label">Vedoucí projektu</label>
+                    <input type="text" class="form-control" id="vedouci" name="vedouci" value="{{ projekt.vedouci or '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="planovani" {% if projekt.status == 'planovani' %}selected{% endif %}>Plánování</option>
+                        <option value="rozpracovani" {% if projekt.status == 'rozpracovani' %}selected{% endif %}>Rozpracování</option>
+                        <option value="ukonceny" {% if projekt.status == 'ukonceny' %}selected{% endif %}>Ukončený</option>
+                        <option value="pozastaveny" {% if projekt.status == 'pozastaveny' %}selected{% endif %}>Pozastavený</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Uložit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

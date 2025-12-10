@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Rozpočet - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Rozpočet: {{ projekt.nazev }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Přidat rozpočtovou položku</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="alert alert-info">
+                            <small><i class="fas fa-info-circle"></i> Kategorie, které zde přidáte, budou dostupné pro přidávání výdajů.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="kategorie" class="form-label">Kategorie <span class="text-danger">*</span></label>
+                            <select class="form-select" id="kategorie" name="kategorie" required>
+                                <option value="">-- Vyberte kategorii --</option>
+                                <option value="Personál">Personál</option>
+                                <option value="Materiál">Materiál</option>
+                                <option value="Služby">Služby</option>
+                                <option value="Cestování">Cestování</option>
+                                <option value="Technologie">Technologie</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Vývoj">Vývoj</option>
+                                <option value="Design">Design</option>
+                                <option value="Ostatní">Ostatní</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis</label>
+                            <input type="text" class="form-control" id="popis" name="popis" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="castka" class="form-label">Částka (Kč)</label>
+                            <input type="number" class="form-control" id="castka" name="castka" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="poznamka" class="form-label">Poznámka</label>
+                            <textarea class="form-control" id="poznamka" name="poznamka" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Přidat
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Rozpočtové položky</h5>
+                </div>
+                <div class="card-body">
+                    {% if budgets %}
+                        <div class="list-group">
+                            {% for b in budgets %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ b['popis'] }}</h6>
+                                        <small class="text-muted">{{ b['kategorie'] }}</small>
+                                    </div>
+                                    <span class="badge bg-primary">{{ "%.2f"|format(b['castka']) }} Kč</span>
+                                </div>
+                                {% if b['poznamka'] %}
+                                    <small class="text-muted d-block mt-2">{{ b['poznamka'] }}</small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-3 pt-3 border-top">
+                            <strong>Celkem: {{ "%.2f"|format(budgets|sum(attribute='castka')) }} Kč</strong>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím žádné rozpočtové položky</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
