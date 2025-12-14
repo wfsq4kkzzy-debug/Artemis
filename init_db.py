@@ -7,9 +7,40 @@ from models import UctovaSkupina, RozpoctovaPolozka
 def init_database():
     """Vytvořit tabulky a naplnit počáteční data"""
     with app.app_context():
-        # Smazat starou databázi
-        db.drop_all()
-        print("Stará databáze smazána...")
+        import os
+        db_path = os.path.join(os.path.dirname(__file__), 'library_budget.db')
+        
+        # Zkontroluj, zda databáze už existuje a obsahuje data
+        db_exists = os.path.exists(db_path)
+        has_data = False
+        
+        if db_exists:
+            # Zkontroluj, zda databáze obsahuje nějaké tabulky
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            existing_tables = inspector.get_table_names()
+            if existing_tables:
+                # Zkontroluj, zda existují nějaká data
+                for table in existing_tables:
+                    try:
+                        result = db.session.execute(db.text(f"SELECT COUNT(*) FROM {table}"))
+                        count = result.scalar()
+                        if count > 0:
+                            has_data = True
+                            break
+                    except:
+                        pass
+        
+        # Pokud databáze existuje a obsahuje data, NESMAZAT ji
+        if has_data:
+            print("⚠️  Databáze již existuje a obsahuje data. Přeskakuji inicializaci.")
+            print("   Pokud chcete vytvořit novou databázi, smažte soubor library_budget.db ručně.")
+            return
+        
+        # Pokud databáze neexistuje nebo je prázdná, vytvoř novou
+        if db_exists and not has_data:
+            db.drop_all()
+            print("Prázdná databáze smazána...")
         
         # Vytvořit nové tabulky
         db.create_all()

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Změnit rotující službu{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1><i class="fas fa-user-edit"></i> Změnit rotující službu</h1>
+            <p class="text-muted">Změňte zaměstnance v rotující službě</p>
+            
+            <div class="alert alert-info">
+                <strong>Služba:</strong><br>
+                {{ sluzba.datum.strftime('%d.%m.%Y') }} ({{ sluzba.den_nazev }})<br>
+                <strong>Aktuální zaměstnanec:</strong> {{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Nepřiřazeno' }}
+            </div>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="zamestnanec_id" class="form-label">Nový zaměstnanec *</label>
+                    <select class="form-select" id="zamestnanec_id" name="zamestnanec_id" required>
+                        <option value="">-- Vyberte zaměstnance --</option>
+                        {% for zamestnanec in zamestnanci %}
+                        <option value="{{ zamestnanec.id }}" {% if sluzba.zamestnanec_id == zamestnanec.id %}selected{% endif %}>
+                            {{ zamestnanec.jmeno_plne }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save"></i> Uložit změnu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

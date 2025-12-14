@@ -20,8 +20,17 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label for="vedouci" class="form-label">Vedoucí projektu</label>
-                    <input type="text" class="form-control" id="vedouci" name="vedouci" value="{{ projekt.vedouci or '' }}">
+                    <label class="form-label">Založil projekt</label>
+                    <div class="form-control-plaintext">
+                        {% if projekt.created_by_user %}
+                            <i class="fas fa-user"></i> <strong>{{ projekt.created_by_user.jmeno_prijmeni }}</strong> ({{ projekt.created_by_user.username }})
+                        {% elif projekt.created_by_personnel %}
+                            <i class="fas fa-user"></i> <strong>{{ projekt.created_by_personnel.jmeno_plne }}</strong>
+                        {% else %}
+                            <span class="text-muted">Neznámý</span>
+                        {% endif %}
+                    </div>
+                    <small class="form-text text-muted">Zakladatel projektu nelze změnit</small>
                 </div>
                 
                 <div class="mb-3">

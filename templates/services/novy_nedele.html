@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Nová nedělní služba{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1><i class="fas fa-calendar-day"></i> Nová nedělní služba</h1>
+            <p class="text-muted">Nedělní služba - zaměstnanci se střídají každou neděli</p>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="nazev" class="form-label">Název služby *</label>
+                    <input type="text" class="form-control" id="nazev" name="nazev" required placeholder="Např. Půjčovna - Neděle">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="oddeleni" class="form-label">Oddělení *</label>
+                    <select class="form-select" id="oddeleni" name="oddeleni" required>
+                        <option value="">-- Vyberte oddělení --</option>
+                        <option value="dospělé" selected>Dospělé</option>
+                    </select>
+                    <small class="form-text text-muted">Nedělní služby jsou pouze pro dospělé oddělení</small>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Nedělní služby jsou fixně nastaveny na <strong>14:00 - 17:00</strong>.
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Zaměstnanci (v pořadí rotace) *</label>
+                    <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                        {% for zamestnanec in zamestnanci %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="zamestnanci_ids" value="{{ zamestnanec.id }}" id="zam_{{ zamestnanec.id }}">
+                            <label class="form-check-label" for="zam_{{ zamestnanec.id }}">
+                                {{ zamestnanec.jmeno_plne }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <small class="form-text text-muted">Vyberte zaměstnance v pořadí, v jakém se budou střídat každou neděli</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="poznamka" class="form-label">Poznámka</label>
+                    <textarea class="form-control" id="poznamka" name="poznamka" rows="3"></textarea>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-check"></i> Vytvořit službu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

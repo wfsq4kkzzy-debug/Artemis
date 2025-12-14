@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.jmeno_prijmeni }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-user"></i> {{ user.jmeno_prijmeni }}
+            </h1>
+            <p class="text-muted">
+                <i class="fas fa-user"></i> {{ user.username }}
+                {% if user.email %} | <i class="fas fa-envelope"></i> {{ user.email }}{% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'user' %}bg-primary{% else %}bg-secondary{% endif %} fs-6">
+                {{ user.role }}
+            </span>
+            <a href="{{ url_for('users.upravit', user_id=user.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Upravit
+            </a>
+            <a href="{{ url_for('users.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informace o uživateli -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Informace
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.personnel %}
+                        <p><strong>Pozice:</strong> {{ user.personnel.pozice or 'Bez pozice' }}</p>
+                        <p><strong>Typ:</strong> {{ user.personnel.typ }}</p>
+                        {% if user.personnel.uvazek %}
+                            <p><strong>Úvazek:</strong> {{ user.personnel.uvazek }}%</p>
+                        {% endif %}
+                    {% endif %}
+                    <p><strong>Role:</strong> {{ user.role }}</p>
+                    <p><strong>Slouží neděle:</strong> 
+                        {% if user.slouzi_nedele %}
+                            <span class="badge bg-success">Ano</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Ne</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Slouží rotující služby:</strong> 
+                        {% if user.slouzi_rotujici %}
+                            <span class="badge bg-warning">Ano</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Ne</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Vytvořeno:</strong> {{ user.datum_vytvoreni.strftime('%d.%m.%Y') if user.datum_vytvoreni else '-' }}</p>
+                    {% if user.posledni_prihlaseni %}
+                        <p><strong>Poslední přihlášení:</strong> {{ user.posledni_prihlaseni.strftime('%d.%m.%Y %H:%M') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Notifikace -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell"></i> Nepřečtené notifikace
+                        {% if notifications %}
+                            <span class="badge bg-danger">{{ notifications|length }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        <div class="list-group list-group-flush">
+                            {% for notif in notifications[:5] %}
+                            <div class="list-group-item">
+                                <strong>{{ notif.title }}</strong>
+                                <br><small class="text-muted">{{ notif.datum_vytvoreni.strftime('%d.%m.%Y %H:%M') }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a href="{{ url_for('users.user_notifications', user_id=user.id) }}" class="btn btn-sm btn-warning mt-2">
+                            Zobrazit všechny
+                        </a>
+                    {% else %}
+                        <p class="text-muted">Žádné nepřečtené notifikace</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Projekty uživatele -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram"></i> Projekty
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user_projects %}
+                        <div class="list-group">
+                            {% for up in user_projects %}
+                            <a href="{{ url_for('projects.detail', projekt_id=up.projekt.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ up.projekt.nazev }}</strong>
+                                        <br><small class="text-muted">{{ up.projekt.status }}</small>
+                                    </div>
+                                    <span class="badge bg-info">{{ up.role }}</span>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <a href="{{ url_for('users.user_projects', user_id=user.id) }}" class="btn btn-sm btn-primary mt-2">
+                            Zobrazit všechny
+                        </a>
+                    {% else %}
+                        <p class="text-muted">Uživatel není přiřazen k žádnému projektu.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sdílené chaty a zprávy -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments"></i> Sdílené chaty
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if shared_chats %}
+                        <div class="list-group">
+                            {% for chat in shared_chats[:5] %}
+                            <div class="list-group-item">
+                                <strong>{{ chat.ai_session.title if chat.ai_session else 'Chat' }}</strong>
+                                <br><small class="text-muted">
+                                    {% if chat.is_public %}
+                                        <span class="badge bg-success">Veřejné</span>
+                                    {% else %}
+                                        Sdíleno s: {{ chat.shared_with.username if chat.shared_with else 'N/A' }}
+                                    {% endif %}
+                                    | {{ chat.datum_sdileni.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Žádné sdílené chaty</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-envelope"></i> Poslední zprávy
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        <div class="list-group">
+                            {% for msg in messages[:5] %}
+                            <div class="list-group-item">
+                                <strong>{{ msg.subject }}</strong>
+                                <br><small class="text-muted">
+                                    Od: {{ msg.from_user.username if msg.from_user else 'N/A' }} | 
+                                    {{ msg.datum_odeslani.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a href="{{ url_for('users.user_messages', user_id=user.id) }}" class="btn btn-sm btn-primary mt-2">
+                            Zobrazit všechny
+                        </a>
+                    {% else %}
+                        <p class="text-muted">Žádné zprávy</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

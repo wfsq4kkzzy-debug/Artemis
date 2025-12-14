@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Měsíční přehledy rozpočtu - {{ rok }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        border-left: 4px solid;
+    }
+    .stat-card.naklady {
+        border-left-color: #dc3545;
+    }
+    .stat-card.vynosy {
+        border-left-color: #28a745;
+    }
+    .stat-card.bilance {
+        border-left-color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-chart-line"></i> Měsíční přehledy rozpočtu
+                    </h1>
+                    <p class="text-muted mb-0">Rok {{ rok }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <form method="GET" class="d-inline">
+                        <select name="rok" class="form-select d-inline-block" style="width: auto;" onchange="this.form.submit()">
+                            {% for r in range(rok - 2, rok + 3) %}
+                            <option value="{{ r }}" {% if r == rok %}selected{% endif %}>{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <a href="{{ url_for('budget.mesicni_stav') }}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Měsíční stav
+                    </a>
+                    <a href="{{ url_for('budget.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zpět
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celkové statistiky za rok -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card naklady">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Náklady celkem</h6>
+                    <h4 class="mb-1">{{ "{:,.0f}".format(celkove_statistiky.naklady_skutecne) }} Kč</h4>
+                    <small class="text-muted">
+                        z {{ "{:,.0f}".format(celkove_statistiky.naklady_rozpocet) }} Kč 
+                        ({{ "{:.1f}".format(celkove_statistiky.naklady_procento) }}%)
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card vynosy">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Výnosy celkem</h6>
+                    <h4 class="mb-1">{{ "{:,.0f}".format(celkove_statistiky.vynosy_skutecne) }} Kč</h4>
+                    <small class="text-muted">
+                        z {{ "{:,.0f}".format(celkove_statistiky.vynosy_rozpocet) }} Kč 
+                        ({{ "{:.1f}".format(celkove_statistiky.vynosy_procento) }}%)
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card bilance">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Bilance celkem</h6>
+                    <h4 class="mb-1 {% if celkove_statistiky.bilance < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ "{:,.0f}".format(celkove_statistiky.bilance) }} Kč
+                    </h4>
+                    <small class="text-muted">Výnosy - Náklady</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafy -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Vývoj nákladů a výnosů během roku</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="vydajeVynosyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bilance po měsících</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="bilanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabulka měsíčních přehledů -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Detailní přehled po měsících</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Měsíc</th>
+                                    <th class="text-end">Náklady rozpočet</th>
+                                    <th class="text-end">Náklady skutečné</th>
+                                    <th class="text-end">%</th>
+                                    <th class="text-end">Výnosy rozpočet</th>
+                                    <th class="text-end">Výnosy skutečné</th>
+                                    <th class="text-end">%</th>
+                                    <th class="text-end">Bilance</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in mesicni_data %}
+                                {% set s = data.statistiky %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ data.nazev }}</strong>
+                                    </td>
+                                    <td class="text-end">{{ "{:,.0f}".format(s.naklady_rozpocet) }} Kč</td>
+                                    <td class="text-end">{{ "{:,.0f}".format(s.naklady_skutecne) }} Kč</td>
+                                    <td class="text-end">
+                                        <span class="badge {% if s.naklady_procento > 100 %}bg-danger{% elif s.naklady_procento > 80 %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ "{:.1f}".format(s.naklady_procento) }}%
+                                        </span>
+                                    </td>
+                                    <td class="text-end">{{ "{:,.0f}".format(s.vynosy_rozpocet) }} Kč</td>
+                                    <td class="text-end">{{ "{:,.0f}".format(s.vynosy_skutecne) }} Kč</td>
+                                    <td class="text-end">
+                                        <span class="badge {% if s.vynosy_procento > 100 %}bg-success{% elif s.vynosy_procento > 80 %}bg-info{% else %}bg-secondary{% endif %}">
+                                            {{ "{:.1f}".format(s.vynosy_procento) }}%
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="{% if s.bilance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ "{:,.0f}".format(s.bilance) }} Kč
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('budget.mesicni_stav', mesic=data.mesic, rok=rok) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Data pro grafy
+const mesice = {{ nazvy_mesicu | tojson | safe }};
+const mesicniData = [
+    {% for data in mesicni_data %}
+    {
+        mesic: {{ data.mesic }},
+        nazev: "{{ data.nazev }}",
+        statistiky: {
+            naklady_rozpocet: {{ data.statistiky.naklady_rozpocet }},
+            naklady_skutecne: {{ data.statistiky.naklady_skutecne }},
+            naklady_procento: {{ data.statistiky.naklady_procento }},
+            vynosy_rozpocet: {{ data.statistiky.vynosy_rozpocet }},
+            vynosy_skutecne: {{ data.statistiky.vynosy_skutecne }},
+            vynosy_procento: {{ data.statistiky.vynosy_procento }},
+            bilance: {{ data.statistiky.bilance }}
+        }
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+const nakladyRozpocet = mesicniData.map(d => d.statistiky.naklady_rozpocet);
+const nakladySkutecne = mesicniData.map(d => d.statistiky.naklady_skutecne);
+const vynosyRozpocet = mesicniData.map(d => d.statistiky.vynosy_rozpocet);
+const vynosySkutecne = mesicniData.map(d => d.statistiky.vynosy_skutecne);
+const bilance = mesicniData.map(d => d.statistiky.bilance);
+
+// Graf výdajů a výnosů
+const ctx1 = document.getElementById('vydajeVynosyChart').getContext('2d');
+new Chart(ctx1, {
+    type: 'line',
+    data: {
+        labels: mesice,
+        datasets: [
+            {
+                label: 'Náklady - rozpočet',
+                data: nakladyRozpocet,
+                borderColor: 'rgba(220, 53, 69, 0.5)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderDash: [5, 5],
+                tension: 0.1
+            },
+            {
+                label: 'Náklady - skutečné',
+                data: nakladySkutecne,
+                borderColor: 'rgb(220, 53, 69)',
+                backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                tension: 0.1
+            },
+            {
+                label: 'Výnosy - rozpočet',
+                data: vynosyRozpocet,
+                borderColor: 'rgba(40, 167, 69, 0.5)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderDash: [5, 5],
+                tension: 0.1
+            },
+            {
+                label: 'Výnosy - skutečné',
+                data: vynosySkutecne,
+                borderColor: 'rgb(40, 167, 69)',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                tension: 0.1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y.toLocaleString('cs-CZ') + ' Kč';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('cs-CZ') + ' Kč';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Graf bilance
+const ctx2 = document.getElementById('bilanceChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: mesice,
+        datasets: [{
+            label: 'Bilance (Výnosy - Náklady)',
+            data: bilance,
+            backgroundColor: bilance.map(b => b < 0 ? 'rgba(220, 53, 69, 0.7)' : 'rgba(40, 167, 69, 0.7)'),
+            borderColor: bilance.map(b => b < 0 ? 'rgb(220, 53, 69)' : 'rgb(40, 167, 69)'),
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Bilance: ' + context.parsed.y.toLocaleString('cs-CZ') + ' Kč';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('cs-CZ') + ' Kč';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

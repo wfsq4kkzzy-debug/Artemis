@@ -154,6 +154,7 @@
                                         <th>Datum</th>
                                         <th>Popis</th>
                                         <th class="text-end">Částka</th>
+                                        <th>Přidal</th>
                                         <th class="text-center">Akce</th>
                                     </tr>
                                 </thead>
@@ -175,6 +176,13 @@
                                         <td class="text-end">
                                             <strong class="text-danger">{{ "{:,.2f}".format(e.castka) }} Kč</strong>
                                         </td>
+                                        <td>
+                                            {% if e.created_by_initials %}
+                                            <span class="badge bg-secondary">{{ e.created_by_initials }}</span>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
                                                 <a href="{{ url_for('projects.upravit_vydaj', projekt_id=projekt.id, vydaj_id=e.id) }}" 
@@ -185,7 +193,7 @@
                                                 <form method="POST" 
                                                       action="{{ url_for('projects.smazat_vydaj', projekt_id=projekt.id, vydaj_id=e.id) }}" 
                                                       style="display:inline;"
-                                                      onsubmit="return confirm('Opravdu chcete smazat výdaj \'{{ e.popis }}\'?');">
+                                                      onsubmit="return confirm('⚠️ Opravdu chcete smazat výdaj \'{{ e.popis }}\'?');">
                                                     <button type="submit" 
                                                             class="btn btn-outline-danger" 
                                                             title="Smazat">

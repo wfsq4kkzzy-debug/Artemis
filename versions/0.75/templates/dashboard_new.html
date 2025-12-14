@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Přehled rozpočtu{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1>
+                <i class="fas fa-chart-line"></i> Dashboard - Přehled rozpočtu
+            </h1>
+            <p class="text-muted">Rok {{ rok }}</p>
+        </div>
+    </div>
+
+    {% if hlavni_rozpocet %}
+    <!-- Hlavní přehled rozpočtu -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-wallet"></i> {{ hlavni_rozpocet.nazev }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Celkový rozpočet</h6>
+                            <h3 class="text-primary">{{ "{:,.2f}".format(hlavni_rozpocet.castka_celkem_float) }} Kč</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Vydaje</h6>
+                            <h3 class="text-danger">{{ "{:,.2f}".format(hlavni_rozpocet.celkove_vydaje) }} Kč</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Zbývá</h6>
+                            <h3 class="{% if hlavni_rozpocet.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "{:,.2f}".format(hlavni_rozpocet.zbytek) }} Kč
+                            </h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Čerpání</h6>
+                            <h3>{{ "%.1f"|format(hlavni_rozpocet.procento_vycerpano) }}%</h3>
+                            <div class="progress mt-2" style="height: 20px;">
+                                {% set procento = hlavni_rozpocet.procento_vycerpano %}
+                                <div class="progress-bar 
+                                    {% if procento <= 50 %}bg-success
+                                    {% elif procento <= 80 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    style="width: {{ min(100, procento) }}%">
+                                    <strong>{{ "%.1f"|format(procento) }}%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Měsíční přehled -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Měsíční přehled
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if mesicni_prehledy %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Měsíc</th>
+                                        <th class="text-end">Plánováno</th>
+                                        <th class="text-end">Skutečně</th>
+                                        <th class="text-end">Odchylka</th>
+                                        <th class="text-center">Čerpání</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for m in mesicni_prehledy %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ m.mesic }}. měsíc</strong>
+                                        </td>
+                                        <td class="text-end">{{ "{:,.2f}".format(m.planovano_float) }} Kč</td>
+                                        <td class="text-end">{{ "{:,.2f}".format(m.skutecne_float) }} Kč</td>
+                                        <td class="text-end {% if m.odchylka_float < 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ "{:+,.2f}".format(m.odchylka_float) }} Kč
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="progress" style="height: 20px;">
+                                                {% set procento = m.procento_vycerpano %}
+                                                <div class="progress-bar 
+                                                    {% if procento <= 50 %}bg-success
+                                                    {% elif procento <= 80 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    style="width: {{ min(100, procento) }}%">
+                                                    <small>{{ "%.1f"|format(procento) }}%</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Měsíční přehledy budou vytvořeny automaticky při přidání výdajů.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Přehled podle kategorií -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tags"></i> Přehled podle kategorií
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if kategorie_s_vydaji %}
+                        <div class="list-group">
+                            {% for kat_data in kategorie_s_vydaji %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge" style="background-color: {{ kat_data.kategorie.barva }}">
+                                            {{ kat_data.kategorie.nazev }}
+                                        </span>
+                                    </div>
+                                    <strong>{{ "{:,.2f}".format(kat_data.vydaje) }} Kč</strong>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím nejsou žádné kategorie s výdaji.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Projekty v rozpočtu -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram"></i> Projekty v rozpočtu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if projekty_s_vydaji %}
+                        <div class="list-group">
+                            {% for proj_data in projekty_s_vydaji %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ proj_data.projekt.nazev }}</strong>
+                                        <br><small class="text-muted">Rozpočet: {{ "{:,.2f}".format(proj_data.rozpocet) }} Kč</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong class="{% if proj_data.vydaje > proj_data.rozpocet %}text-danger{% else %}text-success{% endif %}">
+                                            {{ "{:,.2f}".format(proj_data.vydaje) }} Kč
+                                        </strong>
+                                        {% if proj_data.vydaje > proj_data.rozpocet %}
+                                            <br><small class="text-danger">Překročeno!</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím nejsou žádné projekty s výdaji v rozpočtu.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Poslední výdaje -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Poslední výdaje
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if posledni_vydaje %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Popis</th>
+                                        <th>Kategorie</th>
+                                        <th>Projekt</th>
+                                        <th class="text-end">Částka</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vydaj in posledni_vydaje %}
+                                    <tr>
+                                        <td>{{ vydaj.datum.strftime('%d.%m.%Y') if vydaj.datum else '-' }}</td>
+                                        <td>{{ vydaj.popis }}</td>
+                                        <td>
+                                            <span class="badge" style="background-color: {{ vydaj.category.barva if vydaj.category else '#007bff' }}">
+                                                {{ vydaj.category.nazev if vydaj.category else 'N/A' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if vydaj.projekt_id %}
+                                                <a href="{{ url_for('projects.detail', projekt_id=vydaj.projekt_id) }}">
+                                                    {{ vydaj.projekt.nazev if vydaj.projekt else 'N/A' }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-danger">{{ "{:,.2f}".format(vydaj.castka_float) }} Kč</strong>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím nejsou žádné výdaje.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Fallback - starý systém -->
+    <div class="alert alert-warning">
+        <h5><i class="fas fa-exclamation-triangle"></i> Hlavní rozpočet není nastaven</h5>
+        <p>Modul rozpočtu je ve vývoji. Prozatím se používá starý systém.</p>
+        <a href="{{ url_for('budget.index') }}" class="btn btn-primary">Přejít na modul rozpočtu</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

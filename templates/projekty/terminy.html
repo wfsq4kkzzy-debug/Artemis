@@ -39,6 +39,16 @@
                             <label for="zodpovedny" class="form-label">Zodpovědný</label>
                             <input type="text" class="form-control" id="zodpovedny" name="zodpovedny">
                         </div>
+                        <div class="mb-3">
+                            <label for="created_by_initials" class="form-label">Iniciály (kdo přidal)</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="created_by_initials" 
+                                   name="created_by_initials" 
+                                   placeholder="Např. JD"
+                                   maxlength="10">
+                            <small class="form-text text-muted">Iniciály jména osoby, která termín přidala</small>
+                        </div>
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-plus"></i> Přidat termín
                         </button>
@@ -74,6 +84,11 @@
                                 </div>
                                 {% if m.popis %}
                                     <small class="text-muted d-block mt-2">{{ m.popis }}</small>
+                                {% endif %}
+                                {% if m.created_by_initials %}
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="fas fa-user"></i> Přidal: <span class="badge bg-secondary">{{ m.created_by_initials }}</span>
+                                    </small>
                                 {% endif %}
                             </div>
                             {% endfor %}

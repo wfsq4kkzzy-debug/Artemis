@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Vyměnit rotující službu{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1><i class="fas fa-exchange-alt"></i> Vyměnit rotující službu</h1>
+            <p class="text-muted">Vyměňte službu s jinou rotující službou</p>
+            
+            <div class="alert alert-info">
+                <strong>Služba k výměně:</strong><br>
+                {{ sluzba.datum.strftime('%d.%m.%Y') }} ({{ sluzba.den_nazev }})<br>
+                <strong>Zaměstnanec:</strong> {{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Nepřiřazeno' }}
+            </div>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="druha_sluzba_id" class="form-label">Vyberte službu, se kterou chcete vyměnit *</label>
+                    <select class="form-select" id="druha_sluzba_id" name="druha_sluzba_id" required>
+                        <option value="">-- Vyberte službu --</option>
+                        {% for druha_sluzba in rotujici_sluzby %}
+                        <option value="{{ druha_sluzba.id }}">
+                            {{ druha_sluzba.datum.strftime('%d.%m.%Y') }} ({{ druha_sluzba.den_nazev }}) - 
+                            {{ druha_sluzba.zamestnanec.jmeno_plne if druha_sluzba.zamestnanec else 'Nepřiřazeno' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-exchange-alt"></i> Vyměnit služby
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,15 +3,15 @@
 {% block title %}Seznam rozpočtu{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid container-md mt-4">
     <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>
+        <div class="col-12 col-md-8">
+            <h1 class="h3 h-md-2">
                 <i class="fas fa-list"></i> Rozpočtové položky {{ rok }}
             </h1>
         </div>
-        <div class="col-md-4 text-end">
-            <a href="{{ url_for('nova_rozpoctova_polozka') }}" class="btn btn-success">
+        <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('budget.nova_polozka') }}" class="btn btn-success w-100 w-md-auto">
                 <i class="fas fa-plus"></i> Nová položka
             </a>
         </div>
@@ -21,7 +21,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label for="typ" class="form-label">Typ</label>
                     <select name="typ" id="typ" class="form-select">
                         <option value="">-- Všechny --</option>
@@ -29,7 +29,7 @@
                         <option value="vynos" {% if request.args.get('typ') == 'vynos' %}selected{% endif %}>Výnosy</option>
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-12 col-md-6">
                     <label for="uctova_skupina" class="form-label">Účtová skupina</label>
                     <select name="uctova_skupina" id="uctova_skupina" class="form-select">
                         <option value="">-- Všechny --</option>
@@ -40,9 +40,9 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-12 col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Filtrovat
+                        <i class="fas fa-search"></i> <span class="d-none d-sm-inline">Filtrovat</span>
                     </button>
                 </div>
             </form>
@@ -93,7 +93,7 @@
                                 <strong>{{ polozka.uctova_skupina.ucet }}/{{ polozka.analyticky_ucet }}</strong>
                             </td>
                             <td>
-                                <a href="{{ url_for('detail_rozpoctove_polozky', polozka_id=polozka.id) }}" class="text-decoration-none">
+                                <a href="{{ url_for('budget.detail_polozky', polozka_id=polozka.id) }}" class="text-decoration-none">
                                     {{ polozka.nazev }}
                                 </a>
                             </td>
@@ -116,15 +116,15 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ url_for('detail_rozpoctove_polozky', polozka_id=polozka.id) }}" 
+                                    <a href="{{ url_for('budget.detail_polozky', polozka_id=polozka.id) }}" 
                                        class="btn btn-info" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ url_for('upravit_rozpoctovou_polozku', polozka_id=polozka.id) }}" 
+                                    <a href="{{ url_for('budget.upravit_polozku', polozka_id=polozka.id) }}" 
                                        class="btn btn-warning" title="Upravit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form method="POST" action="{{ url_for('smazat_rozpoctovou_polozku', polozka_id=polozka.id) }}" 
+                                    <form method="POST" action="{{ url_for('budget.smazat_polozku', polozka_id=polozka.id) }}" 
                                           style="display:inline;" onsubmit="return confirm('Opravdu chcete smazat tuto položku?');">
                                         <button type="submit" class="btn btn-danger btn-sm" title="Smazat">
                                             <i class="fas fa-trash"></i>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Změnit blok rotujících služeb{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1><i class="fas fa-user-edit"></i> Změnit blok rotujících služeb</h1>
+            <p class="text-muted">Změňte zaměstnance v bloku služeb (pátek+sobota)</p>
+            
+            <div class="alert alert-info">
+                <strong>Blok služeb:</strong><br>
+                <strong>Pátek:</strong> {{ patek_datum.strftime('%d.%m.%Y') }} ({{ sluzba_patek.hodina_od }} - {{ sluzba_patek.hodina_do }})<br>
+                <strong>Sobota:</strong> {{ sobota_datum.strftime('%d.%m.%Y') }} ({% if sluzba_sobota %}{{ sluzba_sobota.hodina_od }} - {{ sluzba_sobota.hodina_do }}{% else %}Nepřiřazeno{% endif %})<br>
+                <strong>Aktuální zaměstnanec:</strong> {{ sluzba_patek.zamestnanec.jmeno_plne if sluzba_patek.zamestnanec else 'Nepřiřazeno' }}
+            </div>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="zamestnanec_id" class="form-label">Nový zaměstnanec *</label>
+                    <select class="form-select" id="zamestnanec_id" name="zamestnanec_id" required>
+                        <option value="">-- Vyberte zaměstnance --</option>
+                        {% for zamestnanec in zamestnanci %}
+                        <option value="{{ zamestnanec.id }}" {% if sluzba_patek.zamestnanec_id == zamestnanec.id %}selected{% endif %}>
+                            {{ zamestnanec.jmeno_plne }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.spravce_rotujici', rok=patek_datum.year) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save"></i> Uložit změnu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

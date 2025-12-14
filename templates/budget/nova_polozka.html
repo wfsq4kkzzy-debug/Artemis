@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Nová rozpočtová položka{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus"></i> Přidat rozpočtovou položku
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">
+                                Kategorie <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">-- Vyberte kategorii --</option>
+                                {% for kat in kategorie %}
+                                <option value="{{ kat.id }}">{{ kat.nazev }} ({{ kat.typ }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subcategory_id" class="form-label">Podkategorie (volitelné)</label>
+                            <select class="form-select" id="subcategory_id" name="subcategory_id">
+                                <option value="">-- Bez podkategorie --</option>
+                            </select>
+                            <small class="form-text text-muted">Vyberte nejprve kategorii</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nazev" class="form-label">
+                                Název položky <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nazev" name="nazev" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="castka" class="form-label">
+                                Částka (Kč) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="castka" name="castka" 
+                                   step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis</label>
+                            <textarea class="form-control" id="popis" name="popis" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Přidat položku
+                            </button>
+                            <a href="{{ url_for('budget.index') }}" class="btn btn-outline-secondary">
+                                Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Načtení podkategorií při změně kategorie
+document.getElementById('category_id').addEventListener('change', function() {
+    const categoryId = this.value;
+    const subcategorySelect = document.getElementById('subcategory_id');
+    
+    if (!categoryId) {
+        subcategorySelect.innerHTML = '<option value="">-- Bez podkategorie --</option>';
+        return;
+    }
+    
+    fetch(`/rozpocet/api/kategorie/${categoryId}/podkategorie`)
+        .then(response => response.json())
+        .then(data => {
+            subcategorySelect.innerHTML = '<option value="">-- Bez podkategorie --</option>';
+            data.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = sub.nazev;
+                subcategorySelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Chyba při načítání podkategorií:', error);
+        });
+});
+</script>
+{% endblock %}
+
+
+
+

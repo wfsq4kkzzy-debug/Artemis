@@ -3,40 +3,40 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">
+<div class="container-fluid container-md mt-4">
+    <h1 class="mb-4 h3 h-md-2">
         <i class="fas fa-chart-line"></i> Přehled rozpočtu {{ rok }}
     </h1>
 
     <!-- Souhrn -->
-    <div class="row mb-4">
-        <div class="col-md-4">
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
             <div class="card bg-danger text-white">
                 <div class="card-body">
-                    <h5 class="card-title">
+                    <h5 class="card-title h6">
                         <i class="fas fa-arrow-down"></i> Celkové náklady
                     </h5>
-                    <p class="card-text h4">{{ "{:,.0f}".format(naklady_celkem) }} Kč</p>
+                    <p class="card-text h4 h-md-3">{{ "{:,.0f}".format(naklady_celkem) }} Kč</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h5 class="card-title">
+                    <h5 class="card-title h6">
                         <i class="fas fa-arrow-up"></i> Celkové výnosy
                     </h5>
-                    <p class="card-text h4">{{ "{:,.0f}".format(vynos_celkem) }} Kč</p>
+                    <p class="card-text h4 h-md-3">{{ "{:,.0f}".format(vynos_celkem) }} Kč</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card {% if bilance >= 0 %}bg-info{% else %}bg-warning{% endif %} text-white">
                 <div class="card-body">
-                    <h5 class="card-title">
+                    <h5 class="card-title h6">
                         <i class="fas fa-balance-scale"></i> Bilance
                     </h5>
-                    <p class="card-text h4">{{ "{:,.0f}".format(bilance) }} Kč</p>
+                    <p class="card-text h4 h-md-3">{{ "{:,.0f}".format(bilance) }} Kč</p>
                 </div>
             </div>
         </div>
@@ -71,7 +71,7 @@
                             <tr class="table-light">
                                 <td><strong>{{ skupina.ucet }}</strong></td>
                                 <td>
-                                    <a href="{{ url_for('seznam_rozpoctu', uctova_skupina=skupina.id) }}" class="text-decoration-none">
+                                    <a href="{{ url_for('budget.seznam', uctova_skupina=skupina.id) }}" class="text-decoration-none">
                                         {{ skupina.nazev }}
                                     </a>
                                 </td>
@@ -118,7 +118,7 @@
                             <tr class="table-light">
                                 <td><strong>{{ skupina.ucet }}</strong></td>
                                 <td>
-                                    <a href="{{ url_for('seznam_rozpoctu', uctova_skupina=skupina.id) }}" class="text-decoration-none">
+                                    <a href="{{ url_for('budget.seznam', uctova_skupina=skupina.id) }}" class="text-decoration-none">
                                         {{ skupina.nazev }}
                                     </a>
                                 </td>
@@ -141,7 +141,7 @@
     </div>
 
     <div class="mt-4">
-        <a href="{{ url_for('seznam_rozpoctu') }}" class="btn btn-primary">
+        <a href="{{ url_for('budget.seznam') }}" class="btn btn-primary">
             <i class="fas fa-list"></i> Podrobný seznam rozpočtu
         </a>
     </div>

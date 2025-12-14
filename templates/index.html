@@ -1,31 +1,126 @@
 {% extends "base.html" %}
 
-{% block title %}Hlavní stránka{% endblock %}
+{% block title %}Hlavní stránka - Administrátor{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row mb-5">
+<div class="container-fluid container-md mt-4 mt-md-5">
+    {% if not current_user %}
+    <!-- Výběr uživatele pro přihlášení -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sign-in-alt"></i> Přihlášení
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Vyberte uživatele pro přihlášení:</p>
+                    <form method="POST" action="{{ url_for('switch_user') }}">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <select name="user_id" class="form-select" required>
+                                    <option value="">-- Vyberte uživatele --</option>
+                                    {% if uzivatele %}
+                                        {% for user in uzivatele %}
+                                            <option value="{{ user.id }}">
+                                                {{ user.jmeno_prijmeni }} ({{ user.username }}){% if user.role == 'admin' %} - Admin{% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-sign-in-alt"></i> Přihlásit
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Informace o přihlášeném uživateli -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-user"></i> 
+                Přihlášen jako: <strong>{{ current_user.jmeno_prijmeni }}</strong>
+                {% if is_admin %}
+                    <span class="badge bg-success ms-2">Administrátor</span>
+                {% endif %}
+                <a href="{{ url_for('osobni_dashboard') }}" class="btn btn-sm btn-primary ms-2">
+                    <i class="fas fa-th-large"></i> Můj dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if is_admin %}
+    <!-- Přepínač uživatelů (pouze pro admin) -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h5 class="mb-1">
+                                <i class="fas fa-user-shield text-success"></i> Administrátorský režim
+                            </h5>
+                            <small class="text-muted">Plný přístup ke všem funkcím</small>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="POST" action="{{ url_for('switch_user') }}" class="d-flex gap-2">
+                                <select name="user_id" class="form-select" id="user-select" onchange="this.form.submit()">
+                                    <option value="">-- Vybrat uživatele (přepnout pohled) --</option>
+                                    {% if uzivatele %}
+                                        {% for user in uzivatele %}
+                                            <option value="{{ user.id }}" {% if current_user_id == user.id %}selected{% endif %}>
+                                                {{ user.jmeno_prijmeni }} ({{ user.username }})
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                                {% if current_user_id %}
+                                    <button type="submit" name="user_id" value="" class="btn btn-outline-secondary" title="Zrušit přepnutí">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4 mb-md-5">
         <div class="col-12 text-center">
-            <h1 class="display-4 mb-3">
-                <i class="fas fa-book"></i> Správa rozpočtu Knihovny Polička
+            <h1 class="display-5 display-md-4 mb-3">
+                <i class="far fa-book"></i> <span class="d-none d-sm-inline">Artemis</span><span class="d-sm-none">Artemis</span>
             </h1>
-            <p class="lead text-muted">Vítejte v systému pro správu rozpočtu, projektů a personální agendy</p>
+            <p class="lead text-muted d-none d-md-block">Vítejte v systému Artemis - správa rozpočtu, projektů, personální agendy a služeb</p>
+            <p class="text-muted d-md-none">Artemis - systém pro správu knihovny</p>
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-3 g-md-4">
         <!-- Rozpočet -->
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-calculator fa-4x text-primary"></i>
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-calculator fa-3x fa-md-4x text-primary"></i>
                     </div>
-                    <h3 class="card-title">Rozpočet</h3>
-                    <p class="card-text text-muted">
+                    <h3 class="card-title h5">Rozpočet</h3>
+                    <p class="card-text text-muted small">
                         Správa rozpočtových položek, výdajů a sledování čerpání rozpočtu
                     </p>
-                    <a href="{{ url_for('seznam_rozpoctu') }}" class="btn btn-primary btn-lg w-100">
+                    <a href="{{ url_for('budget.seznam') }}" class="btn btn-primary w-100">
                         <i class="fas fa-arrow-right"></i> Otevřít rozpočet
                     </a>
                 </div>
@@ -33,53 +128,73 @@
         </div>
 
         <!-- Projekty -->
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-project-diagram fa-4x text-success"></i>
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-project-diagram fa-3x fa-md-4x text-success"></i>
                     </div>
-                    <h3 class="card-title">Projekty</h3>
-                    <p class="card-text text-muted">
+                    <h3 class="card-title h5">Projekty</h3>
+                    <p class="card-text text-muted small">
                         Správa projektů, rozpočtů, výdajů, termínů a znalostí
                     </p>
-                    <a href="{{ url_for('projects.seznam') }}" class="btn btn-success btn-lg w-100">
+                    <a href="{{ url_for('projects.seznam') }}" class="btn btn-success w-100">
                         <i class="fas fa-arrow-right"></i> Otevřít projekty
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Personální agenda -->
-        <div class="col-md-6 col-lg-4">
+        {% if is_admin %}
+        <!-- Personální agenda (pouze pro admin) -->
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-users fa-4x text-info"></i>
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-users fa-3x fa-md-4x text-info"></i>
                     </div>
-                    <h3 class="card-title">Personální agenda</h3>
-                    <p class="card-text text-muted">
+                    <h3 class="card-title h5">Personální agenda</h3>
+                    <p class="card-text text-muted small">
                         Správa zaměstnanců, brigádníků a osob na OON
                     </p>
-                    <a href="{{ url_for('seznam_lidi') }}" class="btn btn-info btn-lg w-100">
+                    <a href="{{ url_for('personnel.seznam') }}" class="btn btn-info w-100">
                         <i class="fas fa-arrow-right"></i> Otevřít personální agendu
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Služby -->
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-calendar-alt fa-3x fa-md-4x text-success"></i>
+                    </div>
+                    <h3 class="card-title h5">Služby</h3>
+                    <p class="card-text text-muted small">
+                        Kalendář služeb - kdo půjčuje na jakém oddělení
+                    </p>
+                    <a href="{{ url_for('services.index') }}" class="btn btn-success w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít služby
                     </a>
                 </div>
             </div>
         </div>
 
         <!-- AI Asistent -->
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-robot fa-4x text-warning"></i>
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-robot fa-3x fa-md-4x text-warning"></i>
                     </div>
-                    <h3 class="card-title">AI Asistent</h3>
-                    <p class="card-text text-muted">
+                    <h3 class="card-title h5">AI Asistent</h3>
+                    <p class="card-text text-muted small">
                         Chat s AI asistentem pro pomoc a poradenství
                     </p>
-                    <a href="{{ url_for('ai_assistant.index') }}" class="btn btn-warning btn-lg w-100">
+                    <a href="{{ url_for('ai_assistant.index') }}" class="btn btn-warning w-100">
                         <i class="fas fa-arrow-right"></i> Otevřít AI asistenta
                     </a>
                 </div>
@@ -87,22 +202,62 @@
         </div>
 
         <!-- Dashboard (přehled) -->
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-chart-line fa-4x text-danger"></i>
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-chart-line fa-3x fa-md-4x text-danger"></i>
                     </div>
-                    <h3 class="card-title">Přehled</h3>
-                    <p class="card-text text-muted">
+                    <h3 class="card-title h5">Přehled</h3>
+                    <p class="card-text text-muted small">
                         Dashboard s přehledem rozpočtu a statistikami
                     </p>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-danger btn-lg w-100">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-danger w-100">
                         <i class="fas fa-arrow-right"></i> Otevřít přehled
                     </a>
                 </div>
             </div>
         </div>
+
+        {% if is_admin %}
+        <!-- Dokumentace (pouze pro admin) -->
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-book fa-3x fa-md-4x text-info"></i>
+                    </div>
+                    <h3 class="card-title h5">Dokumentace</h3>
+                    <p class="card-text text-muted small">
+                        Kompletní dokumentace systému, modulů a logy změn
+                    </p>
+                    <a href="{{ url_for('docs.index') }}" class="btn btn-info w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít dokumentaci
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if is_admin and has_users_module %}
+        <!-- Uživatelé (pouze pro admin) -->
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3 mb-md-4">
+                        <i class="fas fa-user-friends fa-3x fa-md-4x text-secondary"></i>
+                    </div>
+                    <h3 class="card-title h5">Uživatelé</h3>
+                    <p class="card-text text-muted small">
+                        Správa uživatelů a jejich oprávnění
+                    </p>
+                    <a href="{{ url_for('users.index') }}" class="btn btn-secondary w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít uživatele
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

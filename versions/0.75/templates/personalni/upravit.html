@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Upravit osobu - {{ clovek.jmeno_plne }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">
+                <i class="fas fa-user-edit"></i> Upravit osobu
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.jmeno.label(class="form-label") }}
+                                {{ form.jmeno(class="form-control" + (" is-invalid" if form.jmeno.errors else "")) }}
+                                {% if form.jmeno.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.jmeno.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.prijmeni.label(class="form-label") }}
+                                {{ form.prijmeni(class="form-control" + (" is-invalid" if form.prijmeni.errors else "")) }}
+                                {% if form.prijmeni.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.prijmeni.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.typ.label(class="form-label") }}
+                            {{ form.typ(class="form-select" + (" is-invalid" if form.typ.errors else "")) }}
+                            {% if form.typ.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.typ.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.pozice.label(class="form-label") }}
+                            {{ form.pozice(class="form-control", placeholder="Např. Knihovnář, Asistent") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.uvazek.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.uvazek(class="form-control", placeholder="100", step="0.5", min="0", max="100") }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="form-text text-muted">0-100% (100% = plný úvazek)</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.mesicni_plat.label(class="form-label") }}
+                                {{ form.mesicni_plat(class="form-control", placeholder="0.00") }}
+                                <small class="form-text text-muted">Pro zaměstnance</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.hodinova_sazba.label(class="form-label") }}
+                                {{ form.hodinova_sazba(class="form-control", placeholder="0.00") }}
+                                <small class="form-text text-muted">Pro brigádníky a OON</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.ic_dph.label(class="form-label") }}
+                            {{ form.ic_dph(class="form-control", placeholder="Povinné pro OON") }}
+                            <small class="form-text text-muted">IČ nebo DIČ - povinné pro OON</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            {{ form.submit(class="btn btn-success", value="Uložit změny") }}
+                            <a href="{{ url_for('personnel.seznam') }}" class="btn btn-secondary">
+                                Zrušit
+                            </a>
+                            <button type="button" class="btn btn-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fas fa-trash"></i> Smazat
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pro potvrzení smazání -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Potvrďte smazání</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Opravdu chcete smazat <strong>{{ clovek.jmeno_plne }}</strong>?</p>
+                <p class="text-muted">Osoba bude označena jako neaktivní.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                <form method="POST" action="{{ url_for('smazat_cloveka', zamestnanec_id=clovek.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Smazat
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

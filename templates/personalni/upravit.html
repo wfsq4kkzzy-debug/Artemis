@@ -81,7 +81,7 @@
 
                         <div class="d-flex gap-2">
                             {{ form.submit(class="btn btn-success", value="Uložit změny") }}
-                            <a href="{{ url_for('seznam_lidi') }}" class="btn btn-secondary">
+                            <a href="{{ url_for('personnel.seznam') }}" class="btn btn-secondary">
                                 Zrušit
                             </a>
                             <button type="button" class="btn btn-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteModal">
@@ -109,7 +109,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
-                <form method="POST" action="{{ url_for('smazat_cloveka', zamestnanec_id=clovek.id) }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('personnel.smazat', zamestnanec_id=clovek.id) }}" style="display:inline;">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Smazat
                     </button>

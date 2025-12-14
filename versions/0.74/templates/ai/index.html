@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Asistent - Pomooc{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Chat Box -->
+            <div class="card" style="height: 600px; display: flex; flex-direction: column;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">🤖 AI Asistent - Pomoc a Poradenství</h5>
+                    <small>Jestem zde, abych ti pomohl</small>
+                </div>
+                
+                <!-- Zprávy -->
+                <div class="card-body overflow-auto" id="chatMessages" style="flex: 1; background: #f8f9fa;">
+                    <div class="text-center text-muted mt-5">
+                        <p><strong>Vítej!</strong></p>
+                        <p>Napiš mi svou otázku nebo co potřebuješ.</p>
+                    </div>
+                </div>
+                
+                <!-- Input -->
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            class="form-control" 
+                            placeholder="Napiš zprávu..."
+                            autocomplete="off"
+                        >
+                        <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">
+                            Odeslat
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Tokeny: <span id="tokenCount">0</span> | 
+                        Session: <span id="sessionId">{{ session.id }}</span>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="alert alert-info mt-3">
+                <strong>💡 Tip:</strong> Můžeš se mě ptát na cokoliv. Znám procedury knihovny, mohu ti poradit nebo pomoci s prací.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const sessionId = {{ session.id }};
+let totalTokens = 0;
+
+// Načti historii zpráv
+function loadHistory() {
+    fetch(`{{ url_for('ai_assistant.api_session_messages', session_id=0) }}`.replace('0', sessionId))
+        .then(r => r.json())
+        .then(messages => {
+            let html = '';
+            messages.forEach(msg => {
+                const isUser = msg.role === 'user';
+                const alignment = isUser ? 'text-end' : 'text-start';
+                const bgClass = isUser ? 'bg-primary text-white' : 'bg-light';
+                const margin = isUser ? 'me-5' : 'ms-5';
+                
+                html += `
+                    <div class="mb-3 ${alignment}">
+                        <div class="d-inline-block p-3 rounded ${bgClass} ${margin}" style="max-width: 70%;">
+                            ${msg.content}
+                            <small class="d-block mt-1" style="opacity: 0.7;">
+                                ${new Date(msg.created_at).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'})}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('chatMessages').innerHTML = html || 
+                '<div class="text-center text-muted mt-5"><p><strong>Vítej!</strong></p><p>Napiš mi svou otázku.</p></div>';
+            scrollToBottom();
+        });
+}
+
+// Odeslání zprávy
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+
+    // Deaktivuj input
+    input.disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    // Přidej uživatelskou zprávu do chatu
+    addMessageToChat(message, 'user');
+    input.value = '';
+
+    // Zobraz "pisání"
+    showTyping();
+
+    // Odešli na server
+    fetch('{{ url_for("ai_assistant.send_message") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: sessionId,
+            message: message
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            addMessageToChat('❌ Chyba: ' + data.error, 'assistant');
+        } else {
+            removeTyping();
+            addMessageToChat(data.assistant_message, 'assistant');
+            totalTokens += data.tokens_used;
+            document.getElementById('tokenCount').textContent = totalTokens;
+        }
+        
+        input.disabled = false;
+        document.getElementById('sendBtn').disabled = false;
+        input.focus();
+    })
+    .catch(err => {
+        addMessageToChat('❌ Chyba připojení: ' + err, 'assistant');
+        input.disabled = false;
+        document.getElementById('sendBtn').disabled = false;
+        input.focus();
+    });
+}
+
+// Přidej zprávu do chatu
+function addMessageToChat(text, role) {
+    const isUser = role === 'user';
+    const alignment = isUser ? 'text-end' : 'text-start';
+    const bgClass = isUser ? 'bg-primary text-white' : 'bg-light';
+    const margin = isUser ? 'me-5' : 'ms-5';
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `mb-3 ${alignment}`;
+    msgDiv.innerHTML = `
+        <div class="d-inline-block p-3 rounded ${bgClass} ${margin}" style="max-width: 70%; word-wrap: break-word;">
+            ${text}
+            <small class="d-block mt-1" style="opacity: 0.7;">
+                ${new Date().toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'})}
+            </small>
+        </div>
+    `;
+    
+    document.getElementById('chatMessages').appendChild(msgDiv);
+    scrollToBottom();
+}
+
+// Typing indikátor
+function showTyping() {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'mb-3 text-start';
+    msgDiv.id = 'typingIndicator';
+    msgDiv.innerHTML = `
+        <div class="d-inline-block p-3 rounded bg-light ms-5">
+            <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+            <span class="ms-2">AI píše...</span>
+        </div>
+    `;
+    document.getElementById('chatMessages').appendChild(msgDiv);
+    scrollToBottom();
+}
+
+function removeTyping() {
+    const typing = document.getElementById('typingIndicator');
+    if (typing) typing.remove();
+}
+
+// Scroll na konec
+function scrollToBottom() {
+    const chatBox = document.getElementById('chatMessages');
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Enter pro odeslání
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// Načti historii při otevření
+loadHistory();
+document.getElementById('messageInput').focus();
+</script>
+
+<style>
+#chatMessages {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+</style>
+{% endblock %}

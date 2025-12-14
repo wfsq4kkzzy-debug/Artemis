@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Můj dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-md mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-0">
+                <i class="fas fa-th-large"></i> Můj dashboard
+            </h1>
+            <p class="text-muted">Vítej, {{ user.jmeno_prijmeni }}!</p>
+        </div>
+    </div>
+
+    <!-- Služby uživatele (hlavní sekce) -->
+    {% if user.personnel_id %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Moje služby
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Výpis služeb (hlavní) -->
+                    {% if sluzby and sluzby|length > 0 %}
+                    <div class="mb-4">
+                        <h6 class="mb-3"><i class="fas fa-list"></i> Nadcházející služby:</h6>
+                        <div class="list-group">
+                            {% for sluzba in sluzby[:5] %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% set datum_str = sluzba.get('datum', '') if sluzba.get('datum') else '' %}
+                                        {% if datum_str %}
+                                            {% set datum_formatted = datum_str[:10] if datum_str|length >= 10 else datum_str %}
+                                            <strong>{{ datum_formatted }}</strong>
+                                            {% set den_nazev = sluzba.get('den_nazev', '') %}
+                                            {% if den_nazev %} - {{ den_nazev }}{% endif %}
+                                        {% endif %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {% set oddeleni = sluzba.get('oddeleni', '') %}
+                                            {% set hodina_od = sluzba.get('hodina_od', '') %}
+                                            {% set hodina_do = sluzba.get('hodina_do', '') %}
+                                            {{ oddeleni }} | {{ hodina_od }} - {{ hodina_do }}
+                                        </small>
+                                    </div>
+                                    {% set typ = sluzba.get('typ', '') %}
+                                    <span class="badge 
+                                        {% if typ == 'fixni' %}bg-primary
+                                        {% elif typ == 'rotujici' %}bg-warning
+                                        {% elif typ == 'nedele' %}bg-danger
+                                        {% else %}bg-info{% endif %}">
+                                        {{ typ }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('services.muj_prehled_sluzeb') }}" class="btn btn-outline-info">
+                                <i class="fas fa-user-circle"></i> Můj přehled služeb ({{ sluzby|length }})
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle"></i> Nemáte žádné služby v aktuálním roce.
+                        <a href="{{ url_for('services.index') }}" class="btn btn-sm btn-outline-info ms-2">
+                            <i class="fas fa-calendar"></i> Zobrazit kalendář služeb
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Statistiky služeb (sekundární) -->
+                    {% if statistiky_sluzeb %}
+                    <div class="border-top pt-3">
+                        <h6 class="mb-3"><i class="fas fa-chart-bar"></i> Statistiky služeb:</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Tento týden</h6>
+                                    <h4 class="mb-0">{{ "%.1f"|format(statistiky_sluzeb.get('celkem', {}).get('tyden', 0)) }} h</h4>
+                                    <small class="text-muted">
+                                        Fixní: {{ "%.1f"|format(statistiky_sluzeb.get('fixni', {}).get('tyden', 0)) }}h | 
+                                        Rotující: {{ "%.1f"|format(statistiky_sluzeb.get('rotujici', {}).get('tyden', 0)) }}h | 
+                                        Neděle: {{ "%.1f"|format(statistiky_sluzeb.get('nedele', {}).get('tyden', 0)) }}h
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Tento měsíc</h6>
+                                    <h4 class="mb-0">{{ "%.1f"|format(statistiky_sluzeb.get('celkem', {}).get('mesic', 0)) }} h</h4>
+                                    <small class="text-muted">
+                                        Fixní: {{ "%.1f"|format(statistiky_sluzeb.get('fixni', {}).get('mesic', 0)) }}h | 
+                                        Rotující: {{ "%.1f"|format(statistiky_sluzeb.get('rotujici', {}).get('mesic', 0)) }}h | 
+                                        Neděle: {{ "%.1f"|format(statistiky_sluzeb.get('nedele', {}).get('mesic', 0)) }}h
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Tento rok</h6>
+                                    <h4 class="mb-0">{{ "%.1f"|format(statistiky_sluzeb.get('celkem', {}).get('rok', 0)) }} h</h4>
+                                    <small class="text-muted">
+                                        Fixní: {{ "%.1f"|format(statistiky_sluzeb.get('fixni', {}).get('rok', 0)) }}h | 
+                                        Rotující: {{ "%.1f"|format(statistiky_sluzeb.get('rotujici', {}).get('rok', 0)) }}h | 
+                                        Neděle: {{ "%.1f"|format(statistiky_sluzeb.get('nedele', {}).get('rok', 0)) }}h
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info border-top pt-3">
+                        <i class="fas fa-info-circle"></i> Statistiky služeb nejsou k dispozici.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Projekty uživatele -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram"></i> Moje projekty
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if projekty %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Celkem projektů</h6>
+                                    <h3 class="mb-0">{{ celkem_projektu }}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Celkový rozpočet</h6>
+                                    <h3 class="mb-0 text-primary">{{ "{:,.0f}".format(celkem_rozpocet) }} Kč</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Celkové výdaje</h6>
+                                    <h3 class="mb-0 text-danger">{{ "{:,.0f}".format(celkem_vydaje) }} Kč</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted mb-1">Zbývá</h6>
+                                    <h3 class="mb-0 {% if (celkem_rozpocet - celkem_vydaje) < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "{:,.0f}".format(celkem_rozpocet - celkem_vydaje) }} Kč
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Projekt</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Rozpočet</th>
+                                        <th class="text-end">Výdaje</th>
+                                        <th class="text-end">Zbývá</th>
+                                        <th class="text-center">Čerpání</th>
+                                        <th class="text-center">Akce</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for projekt in projekty[:10] %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="text-decoration-none">
+                                                <strong>{{ projekt.nazev }}</strong>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if projekt.status == 'planovani' %}bg-info
+                                                {% elif projekt.status == 'rozpracovani' %}bg-warning
+                                                {% elif projekt.status == 'ukonceny' %}bg-success
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ projekt.status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">{{ "{:,.0f}".format(projekt.rozpocet_float) }} Kč</td>
+                                        <td class="text-end text-danger">{{ "{:,.0f}".format(projekt.celkove_vydaje) }} Kč</td>
+                                        <td class="text-end {% if projekt.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ "{:,.0f}".format(projekt.zbytek) }} Kč
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar 
+                                                    {% if projekt.procento_vycerpano <= 50 %}bg-success
+                                                    {% elif projekt.procento_vycerpano <= 80 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    style="width: {{ min(100, projekt.procento_vycerpano) }}%">
+                                                    {{ "%.0f"|format(projekt.procento_vycerpano) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if projekty|length > 10 %}
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('projects.seznam') }}" class="btn btn-outline-primary">
+                                Zobrazit všechny projekty ({{ projekty|length }})
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-project-diagram fa-3x mb-3"></i>
+                            <p>Nemáš žádné projekty.</p>
+                            <a href="{{ url_for('projects.novy') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Vytvořit projekt
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rozpočet (pouze pro admin) -->
+    {% if is_admin and budget_overview and budget_overview.get('success') %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-wallet"></i> Přehled rozpočtu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% set budget_data = budget_overview.get('budget', {}) %}
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">Celkový rozpočet</h6>
+                                <h4 class="mb-0 text-primary">{{ "{:,.0f}".format(budget_data.get('castka_celkem', 0)) }} Kč</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">Celkové výdaje</h6>
+                                <h4 class="mb-0 text-danger">{{ "{:,.0f}".format(budget_data.get('celkove_vydaje', 0)) }} Kč</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">Celkové výnosy</h6>
+                                <h4 class="mb-0 text-success">{{ "{:,.0f}".format(budget_data.get('celkove_vynosy', 0)) }} Kč</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">Bilance</h6>
+                                <h4 class="mb-0 {% if budget_data.get('bilance', 0) >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "{:,.0f}".format(budget_data.get('bilance', 0)) }} Kč
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('budget.index') }}" class="btn btn-outline-success">
+                            <i class="fas fa-eye"></i> Zobrazit detail rozpočtu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Rychlé akce -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Rychlé akce
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('projects.novy') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-plus"></i> Nový projekt
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('services.index') }}" class="btn btn-info w-100">
+                                <i class="fas fa-calendar"></i> Kalendář služeb
+                            </a>
+                        </div>
+                        {% if current_user_id %}
+                        <div class="col-md-3">
+                            <a href="{{ url_for('services.muj_prehled_sluzeb') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-user-circle"></i> Můj přehled služeb
+                            </a>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-3">
+                            <a href="{{ url_for('ai_assistant.index') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-robot"></i> AI Asistent
+                            </a>
+                        </div>
+                        {% if is_admin %}
+                        <div class="col-md-3">
+                            <a href="{{ url_for('budget.index') }}" class="btn btn-success w-100">
+                                <i class="fas fa-wallet"></i> Rozpočet
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

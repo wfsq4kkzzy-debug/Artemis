@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Měsíční aktualizace - {{ polozka.popis }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-md mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 h-md-2">
+                <i class="fas fa-calendar-alt"></i> Měsíční aktualizace položky rozpočtu
+            </h1>
+            <p class="text-muted">
+                <strong>{{ polozka.ucet }}{% if polozka.poducet %}/{{ polozka.poducet }}{% endif %} - {{ polozka.popis }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Přidat/Upravit měsíční aktualizaci</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="mesic" class="form-label">Měsíc <span class="text-danger">*</span></label>
+                            <select class="form-select" id="mesic" name="mesic" required>
+                                {% for m in range(1, 13) %}
+                                <option value="{{ m }}" {% if m == aktualni_mesic %}selected{% endif %}>
+                                    {{ ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'][m-1] }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rok" class="form-label">Rok <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="rok" name="rok" 
+                                   value="{{ aktualni_rok }}" min="2020" max="2100" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="souhrnne_vydaje" class="form-label">
+                                Souhrnné výdaje (Kč) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="souhrnne_vydaje" 
+                                       name="souhrnne_vydaje" step="0.01" min="0" value="0" required>
+                                <span class="input-group-text">Kč</span>
+                            </div>
+                            <small class="form-text text-muted">
+                                Souhrnné výdaje, které nejsou zadány ručně (např. z účetního systému)
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="poznamka" class="form-label">Poznámka</label>
+                            <textarea class="form-control" id="poznamka" name="poznamka" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Uložit aktualizaci
+                            </button>
+                            <a href="{{ url_for('budget.seznam_polozek') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Historie měsíčních aktualizací</h5>
+                </div>
+                <div class="card-body">
+                    {% if mesicni_stavy %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Měsíc/Rok</th>
+                                    <th class="text-end">Souhrnné výdaje</th>
+                                    <th>Poznámka</th>
+                                    <th>Aktualizováno</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stav in mesicni_stavy %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ stav.rok }}/{{ stav.mesic:02d }}</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        {{ "{:,.2f}".format(stav.souhrnne_vydaje_float) }} Kč
+                                    </td>
+                                    <td>
+                                        <small>{{ stav.poznamka or '-' }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ stav.datum_aktualizace.strftime('%d.%m.%Y') if stav.datum_aktualizace else '-' }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="fas fa-info-circle"></i> Zatím nebyly přidány žádné měsíční aktualizace
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

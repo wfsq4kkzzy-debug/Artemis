@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Dokumentace modulů{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-cubes"></i> Dokumentace modulů</h1>
+            <p class="text-muted">Podrobný popis jednotlivých modulů systému</p>
+        </div>
+    </div>
+
+    <!-- Modul Rozpočet -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calculator"></i> Modul Rozpočet</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Účel</h6>
+                    <p>Správa rozpočtu knihovny pro jednotlivé roky. Umožňuje vytvářet rozpočty, kategorie, 
+                    přidávat výdaje a sledovat čerpání rozpočtu.</p>
+                    
+                    <h6 class="mt-3">Hlavní funkce</h6>
+                    <ul>
+                        <li>Vytváření a správa rozpočtů pro různé roky</li>
+                        <li>Správa rozpočtových kategorií</li>
+                        <li>Přidávání a úprava výdajů</li>
+                        <li>Sledování čerpání rozpočtu</li>
+                        <li>Vizualizace rozpočtu (grafy, přehledy)</li>
+                        <li>Propojení výdajů s projekty</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Struktura</h6>
+                    <ul>
+                        <li><strong>models.py:</strong> Budget, BudgetCategory, Expense</li>
+                        <li><strong>executor.py:</strong> BudgetExecutor - business logika</li>
+                        <li><strong>routes.py:</strong> Webové routy pro rozpočet</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Klíčové modely</h6>
+                    <ul>
+                        <li><strong>Budget:</strong> Rozpočet pro konkrétní rok</li>
+                        <li><strong>BudgetCategory:</strong> Kategorie v rozpočtu (např. "Personál", "Materiál")</li>
+                        <li><strong>Expense:</strong> Konkrétní výdaj v rozpočtu</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul Projekty -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Modul Projekty</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Účel</h6>
+                    <p>Správa projektů knihovny. Umožňuje vytvářet projekty, spravovat jejich rozpočty, 
+                    výdaje, termíny a komunikaci mezi členy týmu.</p>
+                    
+                    <h6 class="mt-3">Hlavní funkce</h6>
+                    <ul>
+                        <li>Vytváření a správa projektů</li>
+                        <li>Správa rozpočtu projektu</li>
+                        <li>Přidávání výdajů k projektu</li>
+                        <li>Správa termínů a milestonů</li>
+                        <li>Nástěnka pro komunikaci (vzkazy)</li>
+                        <li>Sdílení projektů mezi uživateli</li>
+                        <li>Logování změn (kdo přidal výdaj, termín, vzkaz)</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Struktura</h6>
+                    <ul>
+                        <li><strong>models.py:</strong> Projekt, VydajProjektu, Termin, Zprava, ProjectShare</li>
+                        <li><strong>executor.py:</strong> ProjectExecutor - business logika</li>
+                        <li><strong>routes.py:</strong> Webové routy pro projekty</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Klíčové modely</h6>
+                    <ul>
+                        <li><strong>Projekt:</strong> Hlavní model projektu s rozpočtem a statusem</li>
+                        <li><strong>VydajProjektu:</strong> Výdaj v projektu s logováním autora</li>
+                        <li><strong>Termin:</strong> Termín/milestone projektu</li>
+                        <li><strong>Zprava:</strong> Vzkaz na nástěnce projektu (může být adresován konkrétnímu uživateli nebo všem)</li>
+                        <li><strong>ProjectShare:</strong> Sdílení projektu s oprávněními (read/write)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul Personální agenda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Modul Personální agenda</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Účel</h6>
+                    <p>Správa zaměstnanců, brigádníků a osob na OON (odměny za odbornou činnost).</p>
+                    
+                    <h6 class="mt-3">Hlavní funkce</h6>
+                    <ul>
+                        <li>Přidávání a správa zaměstnanců</li>
+                        <li>Evidence brigádníků</li>
+                        <li>Správa osob na OON</li>
+                        <li>Propojení s uživatelskými účty</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Klíčové modely</h6>
+                    <ul>
+                        <li><strong>ZamestnanecAOON:</strong> Model pro zaměstnance, brigádníky a osoby na OON</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul Uživatelé -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-user-friends"></i> Modul Uživatelé</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Účel</h6>
+                    <p>Správa uživatelů systému. Každý uživatel je propojen s personálním záznamem.</p>
+                    
+                    <h6 class="mt-3">Hlavní funkce</h6>
+                    <ul>
+                        <li>Vytváření uživatelských účtů</li>
+                        <li>Propojení s personální agendou</li>
+                        <li>Správa rolí (admin, user, viewer)</li>
+                        <li>Přepínání mezi uživateli (pro admina)</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Klíčové modely</h6>
+                    <ul>
+                        <li><strong>User:</strong> Uživatel systému s propojením na personální záznam</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul Služby -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Modul Služby</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Účel</h6>
+                    <p>Kalendář služeb - kdo půjčuje na jakém oddělení. Správa fixních, rotujících a nedělních služeb.</p>
+                    
+                    <h6 class="mt-3">Hlavní funkce</h6>
+                    <ul>
+                        <li>Vytváření fixních služeb (opakují se každý týden)</li>
+                        <li>Vytváření rotujících služeb (zaměstnanci se střídají)</li>
+                        <li>Vytváření nedělních služeb</li>
+                        <li>Automatické generování služeb pro celý rok 2026</li>
+                        <li>Kalendářní zobrazení služeb</li>
+                        <li>Filtrování podle oddělení a typu služby</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Typy služeb</h6>
+                    <ul>
+                        <li><strong>Fixní:</strong> Stejný zaměstnanec každý týden ve stejný den</li>
+                        <li><strong>Rotující:</strong> Zaměstnanci se střídají v pořadí</li>
+                        <li><strong>Neděle:</strong> Speciální rotující služba vždy v neděli</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Klíčové modely</h6>
+                    <ul>
+                        <li><strong>SluzbaTemplate:</strong> Šablona služby (pravidla pro generování)</li>
+                        <li><strong>Sluzba:</strong> Konkrétní služba v kalendáři s datem a zaměstnancem</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Oddělení</h6>
+                    <ul>
+                        <li><strong>Dětské:</strong> Dětské oddělení knihovny</li>
+                        <li><strong>Dospělé:</strong> Dospělé oddělení knihovny</li>
+                    </ul>
+                    
+                    <p class="text-muted mt-3"><strong>Poznámka:</strong> Úterý je automaticky označeno jako zavřeno - žádné služby se negenerují.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul AI Asistent -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot"></i> Modul AI Asistent</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Účel</h6>
+                    <p>AI asistent pro pomoc a poradenství. Používá Anthropic Claude API pro přirozenou komunikaci 
+                    a přístup k datům v systému.</p>
+                    
+                    <h6 class="mt-3">Hlavní funkce</h6>
+                    <ul>
+                        <li>Chat s AI asistentem</li>
+                        <li>Přístup k datům v databázi</li>
+                        <li>Analýza rozpočtu a projektů</li>
+                        <li>Znalostní báze</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

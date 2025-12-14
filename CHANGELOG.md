@@ -1,5 +1,76 @@
 # CHANGELOG
 
+## [0.75] - 2025-12-10
+
+### 🚧 Nový modul rozpočtu (ve vývoji)
+- ✅ **Nová databázová struktura** - Budget, BudgetCategory, BudgetItem, Expense, MonthlyBudget
+- ✅ **Více rozpočtů** - možnost vytvářet různé rozpočty
+- ✅ **Editovatelné kategorie** - flexibilní kategorie pro organizaci
+- ✅ **Propojení s projekty** - výdaje projektů se zapisují do hlavního rozpočtu
+- ✅ **Měsíční hlídání** - automatické sledování čerpání po měsících
+- ✅ **Nový dashboard** - přehledný dashboard s více informacemi
+- ✅ **Samostatná databáze** - každá verze má svou vlastní databázi
+
+### 🔧 Technické změny
+- Nové modely pro rozpočet
+- BudgetExecutor s business logikou
+- Dashboard s novým přehledem
+- Databáze se kopíruje do každé verze
+- Config upraven pro správnou cestu k databázi
+
+### 📦 Aktualizované soubory
+- `modules/budget/models.py` - nové modely
+- `modules/budget/routes.py` - placeholder "ve vývoji"
+- `modules/budget/executor.py` - business logika
+- `templates/dashboard_new.html` - nový dashboard
+- `templates/budget/vyvoj.html` - informační stránka
+- `core/config.py` - upravena cesta k databázi
+- `create_version.py` - kopírování databáze do verze
+
+---
+
+## [0.74] - 2025-12-10
+
+### 🏗️ Modulární architektura
+- ✅ **Kompletní refaktoring** - projekt rozdělen do modulů
+- ✅ **Core modul** - základní funkce (db, config)
+- ✅ **Budget modul** - modely, routes, executor
+- ✅ **Projects modul** - modely, routes, executor
+- ✅ **Personnel modul** - modely, routes
+- ✅ **AI modul** - modely, routes, executor
+- ✅ **Hub aplikace** - `app.py` pouze inicializuje a registruje moduly
+
+### 📁 Nová struktura
+```
+library_budget/
+├── app.py                    # Hub
+├── core/                     # Základní funkce
+├── modules/
+│   ├── budget/              # Modul Rozpočet
+│   ├── projects/            # Modul Projekty
+│   ├── personnel/           # Modul Personální
+│   └── ai/                  # Modul AI
+└── models.py                # Zpětná kompatibilita
+```
+
+### 🔧 Technické změny
+- Všechny modely rozděleny do modulů
+- Všechny routes přesunuty do blueprintů
+- Všechny executory přesunuty do modulů
+- Importy aktualizovány (relativní pro moduly)
+- Templates aktualizovány (nové názvy blueprintů)
+- Zpětná kompatibilita zachována
+
+### 📦 Aktualizované soubory
+- `app.py` - hub aplikace
+- `core/` - nová složka
+- `modules/` - nová struktura modulů
+- `models.py` - centralizované importy
+- `forms.py` - lazy importy
+- Všechny templates - aktualizované url_for
+
+---
+
 ## [0.73.1] - 2025-12-10
 
 ### 🔄 Přepracování rozpočtu projektu

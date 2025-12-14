@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Správa rotujících služeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="fas fa-sync-alt"></i> Správa rotujících služeb</h1>
+                    <p class="text-muted">Rok {{ rok }} - přiřazení zaměstnanců k rotujícím službám (pátek+sobota)</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('services.spravce_rotujici', rok=rok-1) }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-chevron-left"></i> {{ rok-1 }}
+                    </a>
+                    <a href="{{ url_for('services.spravce_rotujici', rok=rok+1) }}" class="btn btn-outline-secondary btn-sm">
+                        {{ rok+1 }} <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('services.spravce_rotujici_novy') }}" class="btn btn-warning">
+                        <i class="fas fa-plus"></i> Nová služba
+                    </a>
+                    <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zpět
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Výpis pátek+sobota -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-calendar"></i> Zadané bloky rotujících služeb v roce {{ rok }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Rotující služby (dospělé oddělení): <strong>Pátek 13:00-16:00</strong>, <strong>Sobota 9:00-11:00</strong>
+                    </div>
+                    {% if bloky_sluzeb %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Datum (pátek)</th>
+                                    <th>Datum (sobota)</th>
+                                    <th>Zaměstnanec</th>
+                                    <th>Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for blok in bloky_sluzeb %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ blok.patek_datum.strftime('%d.%m.%Y') }}</strong><br>
+                                        <small class="text-muted">Pátek {{ blok.patek.hodina_od }} - {{ blok.patek.hodina_do }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ blok.sobota_datum.strftime('%d.%m.%Y') }}</strong><br>
+                                        <small class="text-muted">Sobota {% if blok.sobota %}{{ blok.sobota.hodina_od }} - {{ blok.sobota.hodina_do }}{% else %}Nepřiřazeno{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ blok.zamestnanec.jmeno_plne if blok.zamestnanec else 'Nepřiřazeno' }}</strong>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('services.vymenit_rotujici_blok', patek_datum=blok.patek_datum.isoformat()) }}" 
+                                               class="btn btn-sm btn-outline-warning" title="Vyměnit blok služeb">
+                                                <i class="fas fa-exchange-alt"></i> Vyměnit
+                                            </a>
+                                            <a href="{{ url_for('services.zmenit_rotujici_blok', patek_datum=blok.patek_datum.isoformat()) }}" 
+                                               class="btn btn-sm btn-outline-info" title="Změnit zaměstnance v bloku">
+                                                <i class="fas fa-user-edit"></i> Změnit
+                                            </a>
+                                            <form method="POST" action="{{ url_for('services.smazat_sluzbu', sluzba_id=blok.patek.id) }}" 
+                                                  onsubmit="return confirm('Opravdu chcete smazat tento blok služeb (pátek i sobota)?');" style="display: inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Smazat blok služeb">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> V roce {{ rok }} nejsou zadány žádné rotující služby.
+                        <a href="{{ url_for('services.spravce_rotujici_novy') }}" class="alert-link">Vytvořte novou službu</a>.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -20,59 +20,114 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-book"></i> {{ site_name }}
+                <i class="far fa-book"></i> <span class="d-none d-sm-inline">{{ site_name }}</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    {% if current_user %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">
-                            <i class="fas fa-home"></i> Domů
+                        <a class="nav-link" href="{{ url_for('osobni_dashboard') }}">
+                            <i class="fas fa-th-large"></i> <span class="d-none d-md-inline">Můj dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-project-diagram"></i> Projekty
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="projectsDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam') }}">Všechny projekty</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('projects.novy') }}">Nový projekt</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam', status='planovani') }}">V plánování</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam', status='rozpracovani') }}">V rozpracování</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('projects.seznam', status='ukonceny') }}">Ukončené</a></li>
-                        </ul>
-                    </li>
+                    {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('seznam_rozpoctu') }}">
-                            <i class="fas fa-list"></i> Rozpočet
+                        <a class="nav-link" href="{{ url_for('projects.seznam') }}">
+                            <i class="fas fa-project-diagram"></i> <span class="d-none d-md-inline">Projekty</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('seznam_lidi') }}">
-                            <i class="fas fa-users"></i> Personální agenda
+                        <a class="nav-link" href="{{ url_for('budget.index') }}">
+                            <i class="fas fa-wallet"></i> <span class="d-none d-md-inline">Rozpočet</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('services.index') }}">
+                            <i class="fas fa-calendar-alt"></i> <span class="d-none d-md-inline">Služby</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('ai_assistant.index') }}">
-                            <i class="fas fa-robot"></i> AI Asistent
+                            <i class="fas fa-robot"></i> <span class="d-none d-md-inline">AI Asistent</span>
                         </a>
                     </li>
+                    {% if is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('personnel.seznam') }}">
+                            <i class="fas fa-users"></i> <span class="d-none d-md-inline">Personální agenda</span>
+                        </a>
+                    </li>
+                    {% if has_users_module %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('users.index') }}">
+                            <i class="fas fa-user-friends"></i> <span class="d-none d-md-inline">Uživatelé</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('docs.index') }}">
+                            <i class="fas fa-book"></i> <span class="d-none d-md-inline">Dokumentace</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user"></i> <span class="d-none d-md-inline">{{ current_user.jmeno_prijmeni }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><h6 class="dropdown-header">{{ current_user.jmeno_prijmeni }}</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% if is_admin %}
+                            <li><h6 class="dropdown-header">Přepnout uživatele</h6></li>
+                            <li>
+                                <form method="POST" action="{{ url_for('switch_user') }}" id="switch-user-form">
+                                    <select name="user_id" class="form-select form-select-sm" onchange="this.form.submit()" style="margin: 0.25rem 0.5rem; width: calc(100% - 1rem);">
+                                        <option value="">-- Vybrat uživatele --</option>
+                                        {% if uzivatele %}
+                                            {% for user in uzivatele %}
+                                                <option value="{{ user.id }}" {% if current_user_id == user.id %}selected{% endif %}>
+                                                    {{ user.jmeno_prijmeni }} ({{ user.username }})
+                                                </option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li>
+                                <form method="POST" action="{{ url_for('switch_user') }}" style="margin: 0;">
+                                    <button type="submit" name="user_id" value="" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt"></i> Odhlásit
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-sign-in-alt"></i> <span class="d-none d-md-inline">Přihlásit</span>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <!-- Flash Messages -->
-    <div class="container mt-3">
+    <div class="container-fluid container-md mt-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -85,10 +140,13 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light text-center py-4 mt-5">
+    <footer class="bg-light text-center py-3 mt-5">
         <div class="container">
-            <p class="text-muted mb-0">
-                &copy; 2024 Správa rozpočtu Městské knihovny Polička
+            <p class="text-muted mb-1">
+                &copy; 2024 Artemis
+            </p>
+            <p class="text-muted mb-0 small">
+                Verze {{ app_version }}
             </p>
         </div>
     </footer>
@@ -102,3 +160,4 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
+

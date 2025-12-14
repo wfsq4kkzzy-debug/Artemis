@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Uživatelé{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-users"></i> Uživatelé
+            </h1>
+            <p class="text-muted">Správa uživatelů a jejich propojení s projekty</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('users.novy') }}" class="btn btn-success">
+                <i class="fas fa-user-plus"></i> Nový uživatel
+            </a>
+        </div>
+    </div>
+
+    <!-- Seznam uživatelů -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Aktivní uživatelé
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="list-group">
+                            {% for user in users %}
+                            <a href="{{ url_for('users.detail', user_id=user.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ user.jmeno_prijmeni }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> {{ user.username }}
+                                            {% if user.email %} | <i class="fas fa-envelope"></i> {{ user.email }}{% endif %}
+                                        </small>
+                                        {% if user.personnel %}
+                                            <br><small class="text-muted">
+                                                <i class="fas fa-briefcase"></i> {{ user.personnel.pozice or 'Bez pozice' }} | 
+                                                <i class="fas fa-tag"></i> {{ user.personnel.typ }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'user' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                            {{ user.role }}
+                                        </span>
+                                        {% if not user.aktivni %}
+                                            <span class="badge bg-warning">Neaktivní</span>
+                                        {% endif %}
+                                        {% if user.slouzi_nedele %}
+                                            <span class="badge bg-info">Slouží neděle</span>
+                                        {% endif %}
+                                        {% if user.slouzi_rotujici %}
+                                            <span class="badge bg-warning">Rotující služby</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Zatím nejsou žádní uživatelé.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Personální záznamy bez účtu -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Bez uživatelského účtu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if users_without_account %}
+                        <p class="text-muted">Tyto osoby z personálního modulu ještě nemají uživatelský účet:</p>
+                        <div class="list-group">
+                            {% for personnel in users_without_account %}
+                            <div class="list-group-item">
+                                <strong>{{ personnel.jmeno_plne }}</strong>
+                                <br><small class="text-muted">
+                                    {{ personnel.pozice or 'Bez pozice' }} | {{ personnel.typ }}
+                                </small>
+                                <br>
+                                <a href="{{ url_for('users.novy') }}?personnel_id={{ personnel.id }}" class="btn btn-sm btn-primary mt-2">
+                                    <i class="fas fa-user-plus"></i> Vytvořit účet
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-success">
+                            <i class="fas fa-check-circle"></i> Všechny aktivní osoby mají uživatelský účet.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Struktura systému{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-sitemap"></i> Struktura systému Artemis</h1>
+            <p class="text-muted">Architektura a organizace aplikace</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Obecný přehled</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Artemis</h6>
+                    <p>
+                        Artemis je modulární systém pro správu rozpočtu, projektů, personální agendy a služeb 
+                        Městské knihovny Polička. Systém je postaven na Flask frameworku s SQLite databází 
+                        a používá modulární architekturu s Blueprinty.
+                    </p>
+                    
+                    <h6 class="mt-4">Základní technologie</h6>
+                    <ul>
+                        <li><strong>Backend:</strong> Python 3, Flask</li>
+                        <li><strong>Databáze:</strong> SQLite (library_budget.db)</li>
+                        <li><strong>ORM:</strong> SQLAlchemy</li>
+                        <li><strong>Frontend:</strong> Bootstrap 5, Jinja2 templating</li>
+                        <li><strong>AI:</strong> Anthropic Claude API</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-folder-tree"></i> Struktura adresářů</h5>
+                </div>
+                <div class="card-body">
+                    <pre><code>library_budget/
+├── app.py                 # Hlavní Flask aplikace
+├── core/                  # Jádro systému
+│   ├── __init__.py
+│   └── config.py          # Konfigurace
+├── modules/               # Moduly aplikace
+│   ├── budget/            # Modul rozpočtu
+│   ├── projects/          # Modul projektů
+│   ├── personnel/         # Personální agenda
+│   ├── users/             # Správa uživatelů
+│   ├── services/          # Služby (kalendář)
+│   └── ai/                # AI Asistent
+├── templates/             # HTML šablony
+│   ├── base.html          # Základní šablona
+│   ├── index.html         # Hlavní stránka
+│   └── [modul]/           # Šablony pro jednotlivé moduly
+├── static/                # Statické soubory (CSS, JS)
+└── library_budget.db      # SQLite databáze</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Databázové schéma</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Hlavní tabulky:</h6>
+                    <ul>
+                        <li><strong>budget</strong> - Rozpočty pro jednotlivé roky</li>
+                        <li><strong>budget_category</strong> - Kategorie rozpočtu</li>
+                        <li><strong>expense</strong> - Výdaje v rozpočtu</li>
+                        <li><strong>projekt</strong> - Projekty</li>
+                        <li><strong>vydaj_projektu</strong> - Výdaje projektů</li>
+                        <li><strong>termin</strong> - Termíny/milestony projektů</li>
+                        <li><strong>zprava</strong> - Zprávy/vzkazy v projektech</li>
+                        <li><strong>project_share</strong> - Sdílení projektů</li>
+                        <li><strong>zamestnanec_oon</strong> - Personální agenda</li>
+                        <li><strong>user</strong> - Uživatelé systému</li>
+                        <li><strong>sluzba_template</strong> - Šablony služeb</li>
+                        <li><strong>sluzba</strong> - Konkrétní služby v kalendáři</li>
+                        <li><strong>changelog</strong> - Logy změn</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-link"></i> Vztahy mezi moduly</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li><strong>User ↔ ZamestnanecAOON:</strong> Každý uživatel je propojen s personálním záznamem</li>
+                        <li><strong>Projekt ↔ User:</strong> Projekty mají zakladatele (created_by_user_id)</li>
+                        <li><strong>Projekt ↔ ProjectShare:</strong> Projekty mohou být sdíleny mezi uživateli</li>
+                        <li><strong>Projekt ↔ VydajProjektu:</strong> Projekty mají výdaje</li>
+                        <li><strong>Projekt ↔ Zprava:</strong> Projekty mají nástěnku s vzkazy</li>
+                        <li><strong>Sluzba ↔ ZamestnanecAOON:</strong> Služby jsou přiřazeny zaměstnancům</li>
+                        <li><strong>Expense ↔ VydajProjektu:</strong> Výdaje projektů mohou být propojeny s hlavním rozpočtem</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

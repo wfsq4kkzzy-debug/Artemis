@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Nový rozpočet pro rok{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-md mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 h-md-2">
+                <i class="fas fa-plus"></i> Nový rozpočet pro rok
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Vytvořit nový rozpočet</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="rok" class="form-label">Rok <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="rok" name="rok" 
+                                   min="2000" max="2100" value="{{ datetime.utcnow().year }}" required>
+                            <small class="form-text text-muted">Rok rozpočtu (2000-2100)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nazev" class="form-label">Název rozpočtu</label>
+                            <input type="text" class="form-control" id="nazev" name="nazev" 
+                                   placeholder="Např. Rozpočet 2027" maxlength="200">
+                            <small class="form-text text-muted">Volitelné - pokud nevyplníte, použije se "Rozpočet [rok]"</small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Poznámka:</strong> Nový rozpočet bude vytvořen se stejnou strukturou jako aktuální rozpočet 
+                            (základní kategorie). Po vytvoření můžete přidat položky rozpočtu a výdaje.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Vytvořit rozpočet
+                            </button>
+                            <a href="{{ url_for('budget.dalsi_roky') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

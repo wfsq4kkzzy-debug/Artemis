@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Nová fixní služba{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1><i class="fas fa-calendar-check"></i> Nová fixní služba</h1>
+            <p class="text-muted">Fixní služba se opakuje každý týden ve stejný den. Můžete přidat více zaměstnanců s různými časy.</p>
+            
+            <form method="POST" class="mt-4" id="fixniSluzbaForm">
+                <div class="mb-3">
+                    <label for="nazev" class="form-label">Název služby *</label>
+                    <input type="text" class="form-control" id="nazev" name="nazev" required placeholder="Např. Půjčovna - Pondělí">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="oddeleni" class="form-label">Oddělení *</label>
+                    <select class="form-select" id="oddeleni" name="oddeleni" required>
+                        <option value="">-- Vyberte oddělení --</option>
+                        <option value="detske">Dětské</option>
+                        <option value="dospělé">Dospělé</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="den_v_tydnu" class="form-label">Den v týdnu *</label>
+                    <select class="form-select" id="den_v_tydnu" name="den_v_tydnu" required>
+                        {% for den_id, den_nazev in dny_v_tydnu %}
+                        <option value="{{ den_id }}">{{ den_nazev }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Úterý je zavřeno, nelze vybrat</small>
+                </div>
+                
+                <!-- Zaměstnanci -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label mb-0">Zaměstnanci *</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="pridatZamestnance()">
+                            <i class="fas fa-plus"></i> Přidat zaměstnance
+                        </button>
+                    </div>
+                    <div id="zamestnanci-container">
+                        <!-- První řádek zaměstnance -->
+                        <div class="zamestnanec-row card mb-2 p-3">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Zaměstnanec *</label>
+                                    <select class="form-select form-select-sm" name="zamestnanec_id[]" required>
+                                        <option value="">-- Vyberte --</option>
+                                        {% for zamestnanec in zamestnanci %}
+                                        <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Hodina od *</label>
+                                    <select class="form-select form-select-sm" name="hodina_od[]" required>
+                                        {% for hodina in hodiny %}
+                                        <option value="{{ hodina }}" {% if hodina == '08:00' %}selected{% endif %}>{{ hodina }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Hodina do *</label>
+                                    <select class="form-select form-select-sm" name="hodina_do[]" required>
+                                        {% for hodina in hodiny %}
+                                        <option value="{{ hodina }}" {% if hodina == '16:00' %}selected{% endif %}>{{ hodina }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="odstranitZamestnance(this)" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="poznamka" class="form-label">Poznámka</label>
+                    <textarea class="form-control" id="poznamka" name="poznamka" rows="3"></textarea>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Vytvořit službu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let zamestnanecCounter = 1;
+
+function pridatZamestnance() {
+    const container = document.getElementById('zamestnanci-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'zamestnanec-row card mb-2 p-3';
+    newRow.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small">Zaměstnanec *</label>
+                <select class="form-select form-select-sm" name="zamestnanec_id[]" required>
+                    <option value="">-- Vyberte --</option>
+                    {% for zamestnanec in zamestnanci %}
+                    <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Hodina od *</label>
+                <select class="form-select form-select-sm" name="hodina_od[]" required>
+                    {% for hodina in hodiny %}
+                    <option value="{{ hodina }}" {% if hodina == '08:00' %}selected{% endif %}>{{ hodina }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Hodina do *</label>
+                <select class="form-select form-select-sm" name="hodina_do[]" required>
+                    {% for hodina in hodiny %}
+                    <option value="{{ hodina }}" {% if hodina == '16:00' %}selected{% endif %}>{{ hodina }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="odstranitZamestnance(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(newRow);
+    zamestnanecCounter++;
+    updateDeleteButtons();
+}
+
+function odstranitZamestnance(button) {
+    const row = button.closest('.zamestnanec-row');
+    row.remove();
+    updateDeleteButtons();
+}
+
+function updateDeleteButtons() {
+    const rows = document.querySelectorAll('.zamestnanec-row');
+    rows.forEach((row, index) => {
+        const deleteBtn = row.querySelector('button[onclick*="odstranitZamestnance"]');
+        if (deleteBtn) {
+            deleteBtn.style.display = rows.length > 1 ? 'block' : 'none';
+        }
+    });
+}
+
+// Inicializace při načtení stránky
+document.addEventListener('DOMContentLoaded', function() {
+    updateDeleteButtons();
+});
+</script>
+{% endblock %}

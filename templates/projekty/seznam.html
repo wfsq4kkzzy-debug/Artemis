@@ -3,24 +3,24 @@
 {% block title %}Projekty{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid container-md mt-4 mt-md-5">
     <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>
+        <div class="col-12 col-md-8">
+            <h1 class="h3 h-md-2">
                 <i class="fas fa-project-diagram"></i> Všechny projekty
             </h1>
         </div>
-        <div class="col-md-4 text-end">
-            <a href="{{ url_for('projects.novy') }}" class="btn btn-primary btn-lg">
+        <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('projects.novy') }}" class="btn btn-primary w-100 w-md-auto">
                 <i class="fas fa-plus"></i> Nový projekt
             </a>
         </div>
     </div>
 
     {% if projekty %}
-    <div class="row">
+    <div class="row g-3">
         {% for projekt in projekty %}
-        <div class="col-md-6 col-lg-4 mb-4">
+        <div class="col-12 col-md-6 col-lg-4">
             <div class="card h-100">
                 <div class="card-body">
                     <h5 class="card-title">
@@ -44,7 +44,18 @@
                     </div>
                     
                     <div class="small text-muted mb-3">
-                        <div>Vedoucí: <strong>{{ projekt.vedouci or 'Není přiřazen' }}</strong></div>
+                        <div>
+                            <i class="fas fa-user-plus"></i> Založil: 
+                            <strong>
+                                {% if projekt.created_by_user %}
+                                    {{ projekt.created_by_user.jmeno_prijmeni }}
+                                {% elif projekt.created_by_personnel %}
+                                    {{ projekt.created_by_personnel.jmeno_plne }}
+                                {% else %}
+                                    Neznámý
+                                {% endif %}
+                            </strong>
+                        </div>
                         <div>Vytvořeno: <strong>{{ projekt.datum_vytvoreni.strftime('%d.%m.%Y') }}</strong></div>
                     </div>
                     
@@ -66,7 +77,7 @@
                             <i class="fas fa-eye"></i> Otevřít
                         </a>
                         <form method="POST" action="{{ url_for('projects.smazat', projekt_id=projekt.id) }}" 
-                              onsubmit="return confirm('Opravdu chcete smazat projekt \'{{ projekt.nazev }}\'? Tato akce je nevratná a smaže všechny související záznamy (rozpočet, výdaje, termíny, zprávy, znalosti).');" 
+                              onsubmit="return confirm('⚠️ OPRAVDU CHCETE SMAZAT PROJEKT \'{{ projekt.nazev }}\'?\\n\\n🔴 Tato akce je NEVRATNÁ a smaže:\\n\\n📋 V projektu:\\n- Všechny rozpočtové položky projektu\\n- Všechny výdaje projektu\\n- Všechny termíny\\n- Všechny zprávy\\n\\n💰 V hlavním rozpočtu:\\n- Všechny výdaje tohoto projektu v rozpočtu\\n\\nPokračovat?');" 
                               style="display: inline;">
                             <button type="submit" class="btn btn-sm btn-outline-danger w-100">
                                 <i class="fas fa-trash"></i> Smazat

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Upravit výdaj - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-edit"></i> Upravit výdaj
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit"></i> Úprava výdaje
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">
+                                Popis výdaje <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="popis" 
+                                   name="popis" 
+                                   value="{{ vydaj.popis }}"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="castka" class="form-label">
+                                Částka (Kč) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="castka" 
+                                   name="castka" 
+                                   step="0.01" 
+                                   min="0.01"
+                                   value="{{ "%.2f"|format(vydaj.castka) }}"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="datum" class="form-label">Datum výdaje</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="datum" 
+                                   name="datum"
+                                   value="{{ vydaj.datum[:10] if vydaj.datum else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cis_faktury" class="form-label">Číslo faktury</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="cis_faktury" 
+                                   name="cis_faktury"
+                                   value="{{ vydaj.cis_faktury or '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="dodavatel" class="form-label">Dodavatel</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="dodavatel" 
+                                   name="dodavatel"
+                                   value="{{ vydaj.dodavatel or '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="poznamka" class="form-label">Poznámka</label>
+                            <textarea class="form-control" 
+                                      id="poznamka" 
+                                      name="poznamka" 
+                                      rows="3">{{ vydaj.poznamka or '' }}</textarea>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Uložit změny
+                            </button>
+                            <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                                Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

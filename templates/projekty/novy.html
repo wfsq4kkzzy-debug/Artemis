@@ -20,8 +20,18 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label for="vedouci" class="form-label">Vedoucí projektu</label>
-                    <input type="text" class="form-control" id="vedouci" name="vedouci">
+                    <label for="created_by_user_id" class="form-label">Založil (uživatel) - volitelné</label>
+                    <select class="form-select" id="created_by_user_id" name="created_by_user_id">
+                        <option value="">-- Vynechat --</option>
+                        {% if uzivatele %}
+                        {% for uzivatel in uzivatele %}
+                        <option value="{{ uzivatel.id }}">
+                            {{ uzivatel.jmeno_prijmeni }} ({{ uzivatel.username }})
+                        </option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    <small class="form-text text-muted">Volitelné - uživatel, který projekt založil</small>
                 </div>
                 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Další roky - Správa rozpočtů{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 h-md-2">
+                <i class="fas fa-calendar-alt"></i> Další roky - Správa rozpočtů
+            </h1>
+            <p class="text-muted">Správa rozpočtů pro různé roky (minulost i budoucnost)</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Seznam rozpočtů podle roku
+                    </h5>
+                    <a href="{{ url_for('budget.novy_rozpocet_rok') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus"></i> Přidat nový rozpočet
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if rozpocty %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rok</th>
+                                    <th>Název</th>
+                                    <th class="text-end">Celkový rozpočet</th>
+                                    <th class="text-end">Výdaje</th>
+                                    <th class="text-end">Výnosy</th>
+                                    <th class="text-end">Bilance</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for roz in rozpocty %}
+                                <tr class="{% if roz.hlavni %}table-success{% endif %}" style="{% if roz.hlavni %}background-color: rgba(25, 135, 84, 0.1);{% endif %}">
+                                    <td>
+                                        <strong>{{ roz.rok }}</strong>
+                                        {% if roz.hlavni %}
+                                            <span class="badge bg-success ms-2">Hlavní</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ roz.nazev }}</td>
+                                    <td class="text-end">{{ "{:,.2f}".format(roz.castka_celkem) }} Kč</td>
+                                    <td class="text-end text-danger">{{ "{:,.2f}".format(roz.celkove_vydaje) }} Kč</td>
+                                    <td class="text-end text-success">{{ "{:,.2f}".format(roz.celkove_vynosy) }} Kč</td>
+                                    <td class="text-end {% if roz.bilance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "{:,.2f}".format(roz.bilance) }} Kč
+                                    </td>
+                                    <td>
+                                        {% if roz.hlavni %}
+                                            <span class="badge bg-success">Aktivní</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Neaktivní</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if not roz.hlavni %}
+                                        <form method="POST" action="{{ url_for('budget.nastavit_hlavni_rozpocet', budget_id=roz.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-primary" 
+                                                    onclick="return confirm('Nastavit rozpočet pro rok {{ roz.rok }} jako hlavní?')">
+                                                <i class="fas fa-star"></i> Nastavit jako hlavní
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-muted">Hlavní rozpočet</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Zatím není vytvořen žádný rozpočet. 
+                        <a href="{{ url_for('budget.novy_rozpocet_rok') }}">Vytvořte první rozpočet</a>.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('budget.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět na rozpočet
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

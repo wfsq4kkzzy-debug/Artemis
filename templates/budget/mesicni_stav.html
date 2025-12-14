@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Měsíční stav rozpočtu - {{ nazvy_mesicu[mesic-1] }} {{ rok }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-editable input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: right;
+    }
+    .table-editable input:focus {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        outline: none;
+    }
+    .stat-card {
+        border-left: 4px solid;
+    }
+    .stat-card.naklady {
+        border-left-color: #dc3545;
+    }
+    .stat-card.vynosy {
+        border-left-color: #28a745;
+    }
+    .stat-card.bilance {
+        border-left-color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-calendar-check"></i> Měsíční stav rozpočtu
+                    </h1>
+                    <p class="text-muted mb-0">{{ nazvy_mesicu[mesic-1] }} {{ rok }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('budget.mesicni_prehledy', rok=rok) }}" class="btn btn-info">
+                        <i class="fas fa-chart-line"></i> Měsíční přehledy
+                    </a>
+                    <a href="{{ url_for('budget.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zpět
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiky měsíce -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card naklady">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Náklady</h6>
+                    <h4 class="mb-1">{{ "{:,.0f}".format(statistiky.naklady_skutecne) }} Kč</h4>
+                    <small class="text-muted">
+                        z {{ "{:,.0f}".format(statistiky.naklady_rozpocet) }} Kč 
+                        ({{ "{:.1f}".format(statistiky.naklady_procento) }}%)
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card vynosy">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Výnosy</h6>
+                    <h4 class="mb-1">{{ "{:,.0f}".format(statistiky.vynosy_skutecne) }} Kč</h4>
+                    <small class="text-muted">
+                        z {{ "{:,.0f}".format(statistiky.vynosy_rozpocet) }} Kč 
+                        ({{ "{:.1f}".format(statistiky.vynosy_procento) }}%)
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card bilance">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Bilance</h6>
+                    <h4 class="mb-1 {% if statistiky.bilance < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ "{:,.0f}".format(statistiky.bilance) }} Kč
+                    </h4>
+                    <small class="text-muted">Výnosy - Náklady</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Výběr měsíce/roku -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="d-flex gap-2 align-items-end">
+                        <div class="flex-grow-1">
+                            <label for="mesic_rok" class="form-label">Měsíc a rok</label>
+                            <div class="d-flex gap-2">
+                                <select class="form-select" id="mesic" name="mesic" style="width: auto;">
+                                    {% for m in range(1, 13) %}
+                                    <option value="{{ m }}" {% if m == mesic %}selected{% endif %}>
+                                        {{ nazvy_mesicu[m-1] }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="number" class="form-control" id="rok" name="rok" 
+                                       value="{{ rok }}" min="2020" max="2100" style="width: 100px;">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i> Zobrazit
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabulka položek -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Položky rozpočtu - Měsíční stav</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="stavForm">
+                        <input type="hidden" name="mesic" value="{{ mesic }}">
+                        <input type="hidden" name="rok" value="{{ rok }}">
+                        
+                        <div class="mb-3 text-end">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Uložit aktuální stavy
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover table-editable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 10%">Účet</th>
+                                        <th style="width: 30%">Popis</th>
+                                        <th style="width: 10%" class="text-end">Rozpočet</th>
+                                        <th style="width: 15%" class="text-end">Aktuální stav</th>
+                                        <th style="width: 10%" class="text-end">%</th>
+                                        <th style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for polozka in polozky %}
+                                    {% set stav = mesicni_stavy.get(polozka.id) %}
+                                    {% set aktualni_stav = stav.aktualni_stav_float if stav and stav.aktualni_stav != none else none %}
+                                    {% set procento = (aktualni_stav / polozka.castka_float * 100) if aktualni_stav != none and polozka.castka_float > 0 else none %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ polozka.ucet }}{% if polozka.poducet %}/{{ polozka.poducet }}{% endif %}</strong>
+                                        </td>
+                                        <td>{{ polozka.popis }}</td>
+                                        <td class="text-end">{{ "{:,.0f}".format(polozka.castka_float) }} Kč</td>
+                                        <td class="text-end">
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" 
+                                                       name="aktualni_stav_{{ polozka.id }}" 
+                                                       value="{% if aktualni_stav != none %}{{ "{:.2f}".format(aktualni_stav) }}{% endif %}" 
+                                                       step="0.01" 
+                                                       min="0"
+                                                       placeholder="0.00"
+                                                       class="form-control text-end aktualni-stav-input"
+                                                       data-polozka-id="{{ polozka.id }}"
+                                                       data-rozpocet="{{ polozka.castka_float }}">
+                                                <span class="input-group-text">Kč</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            {% if procento != none %}
+                                            <span class="badge {% if procento > 100 %}bg-danger{% elif procento > 80 %}bg-warning{% else %}bg-success{% endif %} procento-badge-{{ polozka.id }}">
+                                                {{ "{:.1f}".format(procento) }}%
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary procento-badge-{{ polozka.id }}">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if polozka.typ == 'naklad' %}
+                                                <span class="badge bg-danger">N</span>
+                                            {% else %}
+                                                <span class="badge bg-success">V</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Automaticky přepočítat procento při změně aktuálního stavu
+document.querySelectorAll('.aktualni-stav-input').forEach(input => {
+    input.addEventListener('input', function() {
+        const polozkaId = this.dataset.polozkaId;
+        const rozpocet = parseFloat(this.dataset.rozpocet) || 0;
+        const aktualniStav = parseFloat(this.value) || null;
+        
+        const badgeElement = document.querySelector('.procento-badge-' + polozkaId);
+        
+        if (aktualniStav !== null && rozpocet > 0) {
+            const procento = (aktualniStav / rozpocet * 100);
+            
+            let badgeClass = 'bg-success';
+            if (procento > 100) badgeClass = 'bg-danger';
+            else if (procento > 80) badgeClass = 'bg-warning';
+            
+            badgeElement.className = 'badge ' + badgeClass + ' procento-badge-' + polozkaId;
+            badgeElement.textContent = procento.toFixed(1) + '%';
+        } else {
+            badgeElement.className = 'badge bg-secondary procento-badge-' + polozkaId;
+            badgeElement.textContent = '-';
+        }
+    });
+});
+</script>
+{% endblock %}

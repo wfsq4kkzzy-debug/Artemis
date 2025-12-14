@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Nová rotující služba{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1><i class="fas fa-sync-alt"></i> Nová rotující služba</h1>
+            <p class="text-muted">Rotující služba - přiřazení zaměstnanců k termínům (pátek+sobota). Fixní časy: Pátek 13:00-16:00, Sobota 9:00-11:00</p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>Dospělé oddělení</strong> - Rotující služby jsou pouze pro dospělé oddělení.
+                <br>Počet termínů: <strong>{{ dostupne_pateky|length }}</strong> (podle počtu zaměstnanců s rotujícími službami).
+            </div>
+            
+            <form method="POST" class="mt-4" id="rotujiciForm">
+                <div class="mb-3">
+                    <label for="datum_zacatku" class="form-label">Datum začátku (pátek) *</label>
+                    <select class="form-select" id="datum_zacatku" name="datum_zacatku" required>
+                        <option value="">-- Vyberte datum začátku --</option>
+                        {% for patek_datum in dostupne_pateky %}
+                        <option value="{{ patek_datum.isoformat() }}" {% if prvni_volny and patek_datum == prvni_volny %}selected{% endif %}>
+                            {{ patek_datum.strftime('%d.%m.%Y') }} (pátek) - {{ (patek_datum + timedelta(days=1)).strftime('%d.%m.%Y') }} (sobota)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Automaticky nastaveno na první nepřidanou službu, můžete změnit.</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Přiřaďte zaměstnance k termínům *</label>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Každý zaměstnanec může být přiřazen jen k jednomu termínu. 
+                        Po výběru zmizí z nabídky pro další termíny.
+                    </div>
+                    <div class="border rounded p-3" style="max-height: 500px; overflow-y: auto;" id="terminyContainer">
+                        {% if dostupne_pateky and zamestnanci %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Termín</th>
+                                    <th>Zaměstnanec</th>
+                                </tr>
+                            </thead>
+                            <tbody id="terminyTableBody">
+                                {# Termíny se načtou dynamicky podle vybraného data začátku #}
+                            </tbody>
+                        </table>
+                        {% elif not dostupne_pateky %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Nejsou k dispozici žádné volné termíny. 
+                            Všechny termíny jsou již obsazeny.
+                        </div>
+                        {% elif not zamestnanci %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Nejsou k dispozici žádní zaměstnanci s rotujícími službami. 
+                            Nejdříve označte uživatele, že slouží rotující služby.
+                        </div>
+                        {% endif %}
+                    </div>
+                    <small class="form-text text-muted">
+                        Přiřaďte každému termínu jednoho zaměstnance. Po výběru se zaměstnanec automaticky skryje v ostatních termínech.
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="poznamka" class="form-label">Poznámka</label>
+                    <textarea class="form-control" id="poznamka" name="poznamka" rows="3"></textarea>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.spravce_rotujici') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-warning" {% if not dostupne_pateky or not zamestnanci %}disabled{% endif %}>
+                        <i class="fas fa-check"></i> Vytvořit službu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Dynamické načítání termínů od vybraného data začátku
+const datumZacatkuSelect = document.getElementById('datum_zacatku');
+const terminyTableBody = document.getElementById('terminyTableBody');
+const vsechnyPateky = [
+    {% for patek in dostupne_pateky %}
+    '{{ patek.isoformat() }}'{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+const zamestnanciData = [
+    {% for zam in zamestnanci %}
+    {{ zam.id }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+const zamestnanciJmena = [
+    {% for zam in zamestnanci %}
+    '{{ zam.jmeno_plne }}'{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+function updateTerminy() {
+    const vybraneDatum = datumZacatkuSelect.value;
+    if (!vybraneDatum) return;
+    
+    const vybraneIndex = vsechnyPateky.indexOf(vybraneDatum);
+    if (vybraneIndex === -1) return;
+    
+    // Získej počet termínů (počet zaměstnanců)
+    const pocetTerminu = zamestnanciData.length;
+    const terminyOdZacatku = vsechnyPateky.slice(vybraneIndex, vybraneIndex + pocetTerminu);
+    
+    // Vytvoř HTML pro termíny
+    let html = '';
+    terminyOdZacatku.forEach((datumStr) => {
+        const patekDatum = new Date(datumStr + 'T00:00:00');
+        const sobotaDatum = new Date(patekDatum);
+        sobotaDatum.setDate(sobotaDatum.getDate() + 1);
+        
+        const formatDate = (d) => {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}.${month}.${year}`;
+        };
+        
+        html += `
+            <tr class="termin-row" data-datum="${datumStr}">
+                <td>
+                    <strong>${formatDate(patekDatum)}</strong> (pátek)<br>
+                    <small class="text-muted">${formatDate(sobotaDatum)} (sobota)</small>
+                </td>
+                <td>
+                    <select class="form-select zamestnanec-select" 
+                            name="zamestnanec_${datumStr}" 
+                            data-datum="${datumStr}">
+                        <option value="">-- Vyberte zaměstnance --</option>
+                        ${zamestnanciData.map((id, idx) => 
+                            `<option value="${id}" data-zam-id="${id}">${zamestnanciJmena[idx]}</option>`
+                        ).join('')}
+                    </select>
+                </td>
+            </tr>
+        `;
+    });
+    
+    terminyTableBody.innerHTML = html;
+    
+    // Znovu inicializuj event listenery
+    initZamestnanecSelects();
+}
+
+if (datumZacatkuSelect) {
+    datumZacatkuSelect.addEventListener('change', updateTerminy);
+    // Inicializuj při načtení
+    updateTerminy();
+}
+
+// Skryj zaměstnance, kteří jsou již vybráni v jiných termínech
+function initZamestnanecSelects() {
+    document.querySelectorAll('.zamestnanec-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const selectedZamId = this.value;
+            const currentDatum = this.dataset.datum;
+            
+            if (selectedZamId) {
+                document.querySelectorAll('.zamestnanec-select').forEach(otherSelect => {
+                    if (otherSelect !== this && otherSelect.dataset.datum !== currentDatum) {
+                        const option = otherSelect.querySelector(`option[value="${selectedZamId}"]`);
+                        if (option) {
+                            option.style.display = 'none';
+                            option.disabled = true;
+                        }
+                    }
+                });
+            } else {
+                document.querySelectorAll('.zamestnanec-select').forEach(otherSelect => {
+                    if (otherSelect !== this) {
+                        otherSelect.querySelectorAll('option').forEach(opt => {
+                            opt.style.display = '';
+                            opt.disabled = false;
+                        });
+                    }
+                });
+                
+                document.querySelectorAll('.zamestnanec-select').forEach(sel => {
+                    if (sel.value && sel !== this) {
+                        const zamId = sel.value;
+                        document.querySelectorAll('.zamestnanec-select').forEach(otherSel => {
+                            if (otherSel !== sel && otherSel !== this) {
+                                const opt = otherSel.querySelector(`option[value="${zamId}"]`);
+                                if (opt) {
+                                    opt.style.display = 'none';
+                                    opt.disabled = true;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+}
+
+// Při načtení stránky
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializuj termíny podle prvního volného data
+    if (datumZacatkuSelect && vsechnyPateky.length > 0) {
+        updateTerminy();
+    }
+    initZamestnanecSelects();
+});
+</script>
+{% endblock %}

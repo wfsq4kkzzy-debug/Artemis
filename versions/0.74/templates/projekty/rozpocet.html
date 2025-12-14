@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Rozpočet - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-calculator"></i> Rozpočet: {{ projekt.nazev }}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Nastavení rozpočtu -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit"></i> Nastavit rozpočet projektu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="rozpocet" class="form-label">
+                                <strong>Celkový rozpočet projektu (Kč)</strong>
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg" 
+                                   id="rozpocet" 
+                                   name="rozpocet" 
+                                   step="0.01" 
+                                   min="0"
+                                   value="{{ "%.2f"|format(projekt.rozpocet_float) }}"
+                                   required>
+                            <small class="form-text text-muted">
+                                Zadejte celkový rozpočet projektu. K tomuto rozpočtu se budou přidávat výdaje.
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-save"></i> Uložit rozpočet
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Přehled rozpočtu -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie"></i> Přehled rozpočtu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if budget_info and budget_info.get('success') %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><strong>Rozpočet:</strong></span>
+                                <span class="h5 text-primary">{{ "{:,.2f}".format(budget_info.rozpocet) }} Kč</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><strong>Vydaje:</strong></span>
+                                <span class="h5 text-danger">{{ "{:,.2f}".format(budget_info.vydaje) }} Kč</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span><strong>Zbývá:</strong></span>
+                                <span class="h5 {% if budget_info.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ "{:,.2f}".format(budget_info.zbytek) }} Kč
+                                </span>
+                            </div>
+                            
+                            <!-- Progress bar -->
+                            <div class="progress" style="height: 30px;">
+                                {% set procento = budget_info.procento_vycerpano %}
+                                <div class="progress-bar 
+                                    {% if procento <= 50 %}bg-success
+                                    {% elif procento <= 80 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ min(100, procento) }}%"
+                                    aria-valuenow="{{ procento }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    <strong>{{ "%.1f"|format(procento) }}%</strong>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2 text-center">
+                                {{ "%.1f"|format(procento) }}% rozpočtu vyčerpáno
+                            </small>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Rozpočet ještě není nastaven. Nastavte ho pomocí formuláře vlevo.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-success w-100">
+                            <i class="fas fa-money-bill"></i> Správa výdajů
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

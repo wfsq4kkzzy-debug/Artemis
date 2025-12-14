@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Log služby{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1><i class="fas fa-history"></i> Log služby</h1>
+            <p class="text-muted">Historie změn služby</p>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Informace o službě</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Datum:</strong> {{ sluzba.datum.strftime('%d.%m.%Y') }}</p>
+                            <p><strong>Den:</strong> {{ sluzba.den_nazev }}</p>
+                            <p><strong>Čas:</strong> {{ sluzba.hodina_od }} - {{ sluzba.hodina_do }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Oddělení:</strong> {{ sluzba.oddeleni }}</p>
+                            <p><strong>Typ:</strong> {{ sluzba.typ }}</p>
+                            <p><strong>Aktuální zaměstnanec:</strong> {{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Nepřiřazeno' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Historie změn</h5>
+                </div>
+                <div class="card-body">
+                    {% if log_entries %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Datum a čas</th>
+                                    <th>Typ</th>
+                                    <th>Popis</th>
+                                    <th>Poznámka</th>
+                                    <th>Vytvořil</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in log_entries %}
+                                <tr>
+                                    <td>{{ entry.datum.strftime('%d.%m.%Y %H:%M') }}</td>
+                                    <td>
+                                        {% if entry.typ == 'vytvoreni' %}
+                                        <span class="badge bg-success">Vytvoření</span>
+                                        {% elif entry.typ == 'vynimka' %}
+                                        <span class="badge bg-warning text-dark">Výjimka</span>
+                                        {% elif entry.typ == 'vymena' %}
+                                        <span class="badge bg-info">Výměna</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.popis }}</td>
+                                    <td>{{ entry.poznamka or '-' }}</td>
+                                    <td>{{ entry.vytvoril }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">Žádné změny v historii.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Zpět na správu služeb
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Nástěnka - Uživatel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    .stat-card-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .stat-card-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .stat-card-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .project-card {
+        border-left: 4px solid;
+        transition: all 0.3s;
+    }
+    .project-card:hover {
+        border-left-width: 8px;
+    }
+    .project-status-badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+    }
+    .progress-modern {
+        height: 8px;
+        border-radius: 10px;
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    .progress-modern .progress-bar {
+        border-radius: 10px;
+    }
+    .icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: rgba(255,255,255,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Přepínač režimů - kompaktní -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-circle text-primary me-2 fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Uživatelský režim</h6>
+                                <small class="text-muted">Přehled projektů a aktivit</small>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('index', mode='admin') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-shield"></i> Administrátor
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hlavní nadpis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6 mb-2">
+                <i class="fas fa-th-large text-primary"></i> Nástěnka
+            </h1>
+            <p class="text-muted lead">
+                Přehled projektů a aktivit
+                {% if current_user %}
+                    <span class="badge bg-primary ms-2">{{ current_user.jmeno_prijmeni }}</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Statistiky - pěkné karty -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-3">
+            <div class="stat-card stat-card-info dashboard-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle me-3">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 opacity-75">Celkem projektů</h6>
+                        <h2 class="mb-0 fw-bold">{{ celkem_projektu }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="stat-card stat-card-success dashboard-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle me-3">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 opacity-75">Celkový rozpočet</h6>
+                        <h2 class="mb-0 fw-bold">{{ "{:,.0f}".format(celkem_rozpocet) }} Kč</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="stat-card stat-card-warning dashboard-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle me-3">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 opacity-75">Celkové výdaje</h6>
+                        <h2 class="mb-0 fw-bold">{{ "{:,.0f}".format(celkem_vydaje) }} Kč</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="stat-card dashboard-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle me-3">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 opacity-75">Zbývá</h6>
+                        <h2 class="mb-0 fw-bold">{{ "{:,.0f}".format(celkem_rozpocet - celkem_vydaje) }} Kč</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projekty v rozpracování -->
+    {% if projekty_rozpracovani %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white border-0" style="border-radius: 12px 12px 0 0 !important;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks"></i> Projekty v rozpracování
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for projekt in projekty_rozpracovani %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card project-card h-100 border-0 shadow-sm" 
+                                 style="border-left-color: #28a745 !important;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0 fw-bold">
+                                            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" 
+                                               class="text-decoration-none text-dark">
+                                                {{ projekt.nazev }}
+                                            </a>
+                                        </h6>
+                                        <span class="badge bg-success project-status-badge">
+                                            <i class="fas fa-play-circle"></i> Rozpracování
+                                        </span>
+                                    </div>
+                                    
+                                    {% if projekt.popis %}
+                                    <p class="card-text text-muted small mb-3">
+                                        {{ projekt.popis[:100] }}{% if projekt.popis|length > 100 %}...{% endif %}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Rozpočet</small>
+                                            <small class="fw-bold">{{ "{:,.0f}".format(projekt.rozpocet_float) }} Kč</small>
+                                        </div>
+                                        <div class="progress-modern">
+                                            {% set procento = projekt.procento_vycerpano %}
+                                            <div class="progress-bar 
+                                                {% if procento <= 50 %}bg-success
+                                                {% elif procento <= 80 %}bg-warning
+                                                {% else %}bg-danger{% endif %}" 
+                                                style="width: {{ min(100, procento) }}%">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <small class="text-muted">Vydáno: {{ "{:,.0f}".format(projekt.celkove_vydaje) }} Kč</small>
+                                            <small class="fw-bold {% if procento > 80 %}text-danger{% elif procento > 50 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ "%.0f"|format(procento) }}%
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if projekt.vedouci %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> {{ projekt.vedouci }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Projekty v plánování -->
+    {% if projekty_planovani %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-header bg-info text-white border-0" style="border-radius: 12px 12px 0 0 !important;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list"></i> Projekty v plánování
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for projekt in projekty_planovani %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card project-card h-100 border-0 shadow-sm" 
+                                 style="border-left-color: #17a2b8 !important;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0 fw-bold">
+                                            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" 
+                                               class="text-decoration-none text-dark">
+                                                {{ projekt.nazev }}
+                                            </a>
+                                        </h6>
+                                        <span class="badge bg-info project-status-badge">
+                                            <i class="fas fa-calendar"></i> Plánování
+                                        </span>
+                                    </div>
+                                    
+                                    {% if projekt.popis %}
+                                    <p class="card-text text-muted small mb-3">
+                                        {{ projekt.popis[:100] }}{% if projekt.popis|length > 100 %}...{% endif %}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Rozpočet</small>
+                                            <small class="fw-bold">{{ "{:,.0f}".format(projekt.rozpocet_float) }} Kč</small>
+                                        </div>
+                                        <div class="progress-modern">
+                                            {% set procento = projekt.procento_vycerpano %}
+                                            <div class="progress-bar bg-info" 
+                                                style="width: {{ min(100, procento) }}%">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <small class="text-muted">Vydáno: {{ "{:,.0f}".format(projekt.celkove_vydaje) }} Kč</small>
+                                            <small class="fw-bold text-info">
+                                                {{ "%.0f"|format(procento) }}%
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if projekt.vedouci %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> {{ projekt.vedouci }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Prázdný stav -->
+    {% if not projekty %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-project-diagram fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">Zatím nejsou žádné projekty</h4>
+                    <p class="text-muted">Projekty se zobrazí zde, jakmile budou vytvořeny.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Rychlé akce -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-header bg-light border-0" style="border-radius: 12px 12px 0 0 !important;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt text-warning"></i> Rychlé akce
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('projects.seznam') }}" class="btn btn-success btn-lg me-2 mb-2">
+                        <i class="fas fa-project-diagram"></i> Všechny projekty
+                    </a>
+                    <a href="{{ url_for('ai_assistant.index') }}" class="btn btn-warning btn-lg mb-2">
+                        <i class="fas fa-robot"></i> AI Asistent
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

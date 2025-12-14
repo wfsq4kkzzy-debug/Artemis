@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+
+{% block title %}Služby{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-month {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .month-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .calendar-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .calendar-day-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+    .calendar-day-link:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+    .calendar-day {
+        min-height: 80px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        transition: all 0.2s;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .calendar-day-link:hover .calendar-day {
+        background: #e9ecef;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .calendar-day.tuesday {
+        background: #e9ecef;
+        opacity: 0.6;
+    }
+    .calendar-day-header {
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+        color: #6c757d;
+    }
+    .calendar-day-number {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+    .service-item.vynimka {
+        border-left: 3px solid #ffc107;
+        background: #fff3cd;
+    }
+    .service-item.vymena {
+        border-left: 3px solid #28a745;
+        background: #d4edda;
+    }
+    .service-item {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        margin-bottom: 0.25rem;
+        border-radius: 4px;
+        background: white;
+        border-left: 3px solid #007bff;
+    }
+    .service-item.fixni {
+        border-left-color: #28a745;
+    }
+    .service-item.rotujici {
+        border-left-color: #ffc107;
+    }
+    .service-item.nedele {
+        border-left-color: #dc3545;
+    }
+    .service-item.detske {
+        background: #e3f2fd;
+        border-left-color: #64b5f6;
+    }
+    .template-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .day-names {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Tlačítka pro rychlý přístup -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex gap-2 flex-wrap">
+                {% if current_user_id %}
+                <a href="{{ url_for('services.muj_prehled_sluzeb') }}" class="btn btn-info btn-sm">
+                    <i class="fas fa-user-circle"></i> Můj přehled služeb
+                </a>
+                {% endif %}
+                <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-cog"></i> Správa služeb
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-calendar-alt"></i> Služby - Kalendář</h1>
+            <p class="text-muted">Přehled služeb v knihovně od {{ dnes.strftime('%d.%m.%Y') }} do {{ end_date.strftime('%d.%m.%Y') }}</p>
+        </div>
+    </div>
+
+    <!-- Správa služeb a přehled -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-cog fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Správa služeb</h5>
+                    <p class="card-text text-muted small">
+                        Správa fixních, rotujících a nedělních služeb
+                    </p>
+                    <a href="{{ url_for('services.spravce') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-arrow-right"></i> Otevřít správu
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Přehled služeb v aktuálním měsíci -->
+        <div class="col-12 col-md-6 col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Přehled služeb - {{ aktualni_mesic }} {{ aktualni_rok }}</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if prehled_sluzeb %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th>Zaměstnanec</th>
+                                    <th class="text-center"><span class="badge bg-success">Fixní (h)</span></th>
+                                    <th class="text-center"><span class="badge bg-warning">Rotující (h)</span></th>
+                                    <th class="text-center"><span class="badge bg-danger">Neděle (h)</span></th>
+                                    <th class="text-center"><strong>Celkem (h)</strong></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for zam_id, data in prehled_sluzeb.items() %}
+                                {% set hours = data.hours %}
+                                {% set celkem = hours.fixni + hours.rotujici + hours.nedele %}
+                                <tr>
+                                    <td><strong>{{ data.jmeno }}</strong></td>
+                                    <td class="text-center">{% if hours.fixni > 0 %}{{ "%.1f"|format(hours.fixni) }}{% else %}-{% endif %}</td>
+                                    <td class="text-center">{% if hours.rotujici > 0 %}{{ "%.1f"|format(hours.rotujici) }}{% else %}-{% endif %}</td>
+                                    <td class="text-center">{% if hours.nedele > 0 %}{{ "%.1f"|format(hours.nedele) }}{% else %}-{% endif %}</td>
+                                    <td class="text-center"><strong>{% if celkem > 0 %}{{ "%.1f"|format(celkem) }}{% else %}-{% endif %}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">V tomto měsíci nejsou žádné služby.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Kalendář pro každý měsíc od dneška rok dopředu -->
+    {% for mesic_info in mesice_k_zobrazeni %}
+    {% set rok = mesic_info.rok %}
+    {% set mesic = mesic_info.mesic %}
+    {% set mesic_key = '%d-%02d'|format(rok, mesic) %}
+    <div class="calendar-month">
+        <div class="month-header">
+            <h4 class="mb-0">{{ mesic_info.nazev }} {{ rok }}</h4>
+        </div>
+        
+        <div class="day-names">
+            <div>Po</div>
+            <div class="text-muted">Út (zavřeno)</div>
+            <div>St</div>
+            <div>Čt</div>
+            <div>Pá</div>
+            <div>So</div>
+            <div>Ne</div>
+        </div>
+        
+        {% set sluzby_mesice = mesice.get(mesic_key, []) %}
+        {% set first_weekday = get_first_weekday(rok, mesic) %}
+        {% set days_in_month = get_days_in_month(rok, mesic) %}
+        
+        {% for week in range(6) %}
+        <div class="calendar-week">
+            {% for day in range(7) %}
+            {% set day_number = week * 7 + day - first_weekday + 1 %}
+            {% if day_number > 0 and day_number <= days_in_month %}
+                {% set current_date = date(rok, mesic, day_number) %}
+                {% set current_date_str = current_date.isoformat() %}
+                {% set is_past = current_date < dnes %}
+                {% set day_sluzby = [] %}
+                {% for sluzba in sluzby_mesice %}
+                    {% if sluzba.datum[:10] == current_date_str %}
+                        {% set _ = day_sluzby.append(sluzba) %}
+                    {% endif %}
+                {% endfor %}
+                {% if day == 1 %}
+                <div class="calendar-day tuesday {% if is_past %}opacity-50{% endif %}">
+                    <div class="calendar-day-header">
+                        Út
+                    </div>
+                    <div class="calendar-day-number">{{ day_number }}</div>
+                    <small class="text-muted">Zavřeno</small>
+                </div>
+                {% elif is_past %}
+                <div class="calendar-day" style="opacity: 0.3; pointer-events: none;">
+                    <div class="calendar-day-header">
+                        {% if day == 0 %}Po{% elif day == 2 %}St{% elif day == 3 %}Čt{% elif day == 4 %}Pá{% elif day == 5 %}So{% elif day == 6 %}Ne{% endif %}
+                    </div>
+                    <div class="calendar-day-number">{{ day_number }}</div>
+                </div>
+                {% else %}
+                <a href="{{ url_for('services.sluzba_dne', datum_str=current_date_str) }}" 
+                   class="text-decoration-none text-dark calendar-day-link">
+                    <div class="calendar-day {% if current_date == dnes %}border-primary border-2{% endif %}">
+                        <div class="calendar-day-header">
+                            {% if day == 0 %}Po{% elif day == 2 %}St{% elif day == 3 %}Čt{% elif day == 4 %}Pá{% elif day == 5 %}So{% elif day == 6 %}Ne{% endif %}
+                        </div>
+                        <div class="calendar-day-number">
+                            {{ day_number }}
+                            {% if current_date == dnes %}<span class="badge bg-primary" style="font-size: 0.5rem;">Dnes</span>{% endif %}
+                        </div>
+                        {# Seskup služby podle typu (fixní/rotující) a pak podle oddělení #}
+                        {% set sluzby_fixni_dospele = [] %}
+                        {% set sluzby_fixni_detske = [] %}
+                        {% set sluzby_rotujici_dospele = [] %}
+                        {% set sluzby_rotujici_detske = [] %}
+                        {% set sluzby_nedele_dospele = [] %}
+                        {% set sluzby_nedele_detske = [] %}
+                        {% set sluzby_jine = [] %}
+                        
+                        {% for sluzba in day_sluzby %}
+                            {% set typ = sluzba.get('typ', '') or '' %}
+                            {% set oddeleni = sluzba.get('oddeleni', '') or '' %}
+                            
+                            {% if typ == 'fixni' %}
+                                {% if oddeleni == 'dospělé' %}
+                                    {% set _ = sluzby_fixni_dospele.append(sluzba) %}
+                                {% elif oddeleni == 'detske' %}
+                                    {% set _ = sluzby_fixni_detske.append(sluzba) %}
+                                {% endif %}
+                            {% elif typ == 'rotujici' %}
+                                {% if oddeleni == 'dospělé' %}
+                                    {% set _ = sluzby_rotujici_dospele.append(sluzba) %}
+                                {% elif oddeleni == 'detske' %}
+                                    {% set _ = sluzby_rotujici_detske.append(sluzba) %}
+                                {% endif %}
+                            {% elif typ == 'nedele' %}
+                                {% if oddeleni == 'dospělé' %}
+                                    {% set _ = sluzby_nedele_dospele.append(sluzba) %}
+                                {% elif oddeleni == 'detske' %}
+                                    {% set _ = sluzby_nedele_detske.append(sluzba) %}
+                                {% endif %}
+                            {% else %}
+                                {% set _ = sluzby_jine.append(sluzba) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {# FIXNÍ SLUŽBY - Dospělé #}
+                        {% if sluzby_fixni_dospele %}
+                        <div class="service-item fixni {% if sluzby_fixni_dospele[0].je_vynimka %}vynimka{% elif sluzby_fixni_dospele[0].je_vymena %}vymena{% endif %}" style="border-left: 3px solid #28a745;">
+                            <strong><span class="badge bg-success" style="font-size: 0.6rem;">Fixní</span> Dospělé</strong>
+                            {% if sluzby_fixni_dospele[0].je_vynimka %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Výjimka</span>
+                            {% elif sluzby_fixni_dospele[0].je_vymena %}
+                            <span class="badge bg-info" style="font-size: 0.6rem;">Výměna</span>
+                            {% endif %}
+                            <br>
+                            {% for sluzba in sluzby_fixni_dospele %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            <br>
+                            <small class="text-muted">
+                                {% if sluzby_fixni_dospele|length > 0 %}
+                                    {{ sluzby_fixni_dospele[0].hodina_od }} - {{ sluzby_fixni_dospele[0].hodina_do }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {# FIXNÍ SLUŽBY - Dětské #}
+                        {% if sluzby_fixni_detske %}
+                        <div class="service-item fixni detske {% if sluzby_fixni_detske[0].je_vynimka %}vynimka{% elif sluzby_fixni_detske[0].je_vymena %}vymena{% endif %}" style="border-left: 3px solid #28a745; background: #e3f2fd;">
+                            <strong><span class="badge bg-primary" style="font-size: 0.6rem;">Fixní</span> Dětské</strong>
+                            {% if sluzby_fixni_detske[0].je_vynimka %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Výjimka</span>
+                            {% elif sluzby_fixni_detske[0].je_vymena %}
+                            <span class="badge bg-info" style="font-size: 0.6rem;">Výměna</span>
+                            {% endif %}
+                            <br>
+                            {% for sluzba in sluzby_fixni_detske %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            <br>
+                            <small class="text-muted">
+                                {% if sluzby_fixni_detske|length > 0 %}
+                                    {{ sluzby_fixni_detske[0].hodina_od }} - {{ sluzby_fixni_detske[0].hodina_do }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {# ROTUJÍCÍ SLUŽBY - Dospělé #}
+                        {% if sluzby_rotujici_dospele %}
+                        <div class="service-item rotujici {% if sluzby_rotujici_dospele[0].je_vynimka %}vynimka{% elif sluzby_rotujici_dospele[0].je_vymena %}vymena{% endif %}" style="border-left: 3px solid #ffc107;">
+                            <strong><span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Rotující</span> Dospělé</strong>
+                            {% if sluzby_rotujici_dospele[0].je_vynimka %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Výjimka</span>
+                            {% elif sluzby_rotujici_dospele[0].je_vymena %}
+                            <span class="badge bg-info" style="font-size: 0.6rem;">Výměna</span>
+                            {% endif %}
+                            <br>
+                            {% for sluzba in sluzby_rotujici_dospele %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            <br>
+                            <small class="text-muted">
+                                {% if sluzby_rotujici_dospele|length > 0 %}
+                                    {{ sluzby_rotujici_dospele[0].hodina_od }} - {{ sluzby_rotujici_dospele[0].hodina_do }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {# ROTUJÍCÍ SLUŽBY - Dětské #}
+                        {% if sluzby_rotujici_detske %}
+                        <div class="service-item rotujici detske {% if sluzby_rotujici_detske[0].je_vynimka %}vynimka{% elif sluzby_rotujici_detske[0].je_vymena %}vymena{% endif %}" style="border-left: 3px solid #ffc107; background: #e3f2fd;">
+                            <strong><span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Rotující</span> Dětské</strong>
+                            {% if sluzby_rotujici_detske[0].je_vynimka %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Výjimka</span>
+                            {% elif sluzby_rotujici_detske[0].je_vymena %}
+                            <span class="badge bg-info" style="font-size: 0.6rem;">Výměna</span>
+                            {% endif %}
+                            <br>
+                            {% for sluzba in sluzby_rotujici_detske %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            <br>
+                            <small class="text-muted">
+                                {% if sluzby_rotujici_detske|length > 0 %}
+                                    {{ sluzby_rotujici_detske[0].hodina_od }} - {{ sluzby_rotujici_detske[0].hodina_do }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {# NEDĚLNÍ SLUŽBY - Dospělé #}
+                        {% if sluzby_nedele_dospele %}
+                        <div class="service-item nedele {% if sluzby_nedele_dospele[0].je_vynimka %}vynimka{% elif sluzby_nedele_dospele[0].je_vymena %}vymena{% endif %}" style="border-left: 3px solid #dc3545;">
+                            <strong><span class="badge bg-danger" style="font-size: 0.6rem;">Neděle</span> Dospělé</strong>
+                            {% if sluzby_nedele_dospele[0].je_vynimka %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Výjimka</span>
+                            {% elif sluzby_nedele_dospele[0].je_vymena %}
+                            <span class="badge bg-info" style="font-size: 0.6rem;">Výměna</span>
+                            {% endif %}
+                            <br>
+                            {% for sluzba in sluzby_nedele_dospele %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            <br>
+                            <small class="text-muted">
+                                {% if sluzby_nedele_dospele|length > 0 %}
+                                    {{ sluzby_nedele_dospele[0].hodina_od }} - {{ sluzby_nedele_dospele[0].hodina_do }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {# NEDĚLNÍ SLUŽBY - Dětské #}
+                        {% if sluzby_nedele_detske %}
+                        <div class="service-item nedele detske {% if sluzby_nedele_detske[0].je_vynimka %}vynimka{% elif sluzby_nedele_detske[0].je_vymena %}vymena{% endif %}" style="border-left: 3px solid #dc3545; background: #e3f2fd;">
+                            <strong><span class="badge bg-danger" style="font-size: 0.6rem;">Neděle</span> Dětské</strong>
+                            {% if sluzby_nedele_detske[0].je_vynimka %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Výjimka</span>
+                            {% elif sluzby_nedele_detske[0].je_vymena %}
+                            <span class="badge bg-info" style="font-size: 0.6rem;">Výměna</span>
+                            {% endif %}
+                            <br>
+                            {% for sluzba in sluzby_nedele_detske %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            <br>
+                            <small class="text-muted">
+                                {% if sluzby_nedele_detske|length > 0 %}
+                                    {{ sluzby_nedele_detske[0].hodina_od }} - {{ sluzby_nedele_detske[0].hodina_do }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {# OSTATNÍ SLUŽBY #}
+                        {% if sluzby_jine %}
+                        <div class="service-item">
+                            {% for sluzba in sluzby_jine %}
+                                <small>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}</small>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endif %}
+            {% else %}
+                <div class="calendar-day" style="border: none; background: transparent;"></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

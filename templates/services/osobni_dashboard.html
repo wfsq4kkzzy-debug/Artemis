@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Můj dashboard služeb{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    .stat-card p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+    }
+    .service-item {
+        border-left: 4px solid #007bff;
+        margin-bottom: 0.5rem;
+    }
+    .service-item.vynimka {
+        border-left-color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-user-circle"></i> Můj dashboard služeb</h1>
+            <p class="text-muted">{{ user.jmeno_prijmeni }} - {{ rok }}</p>
+        </div>
+    </div>
+
+    <!-- Statistiky -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>{{ "%.1f"|format(statistiky['celkem']['tyden']) }}</h3>
+                <p>Hodin tento týden</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>{{ "%.1f"|format(statistiky['celkem']['mesic']) }}</h3>
+                <p>Hodin tento měsíc</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>{{ "%.1f"|format(statistiky['celkem']['rok']) }}</h3>
+                <p>Hodin celkem ({{ rok }})</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>{{ statistiky['celkem']['pocet'] }}</h3>
+                <p>Celkem služeb</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiky podle typu -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Fixní služby</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Týden:</strong> {{ "%.1f"|format(statistiky['fixni']['tyden']) }} h</p>
+                    <p><strong>Měsíc:</strong> {{ "%.1f"|format(statistiky['fixni']['mesic']) }} h</p>
+                    <p><strong>Rok:</strong> {{ "%.1f"|format(statistiky['fixni']['rok']) }} h</p>
+                    <p><strong>Počet:</strong> {{ statistiky['fixni']['pocet'] }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Rotující služby</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Týden:</strong> {{ "%.1f"|format(statistiky['rotujici']['tyden']) }} h</p>
+                    <p><strong>Měsíc:</strong> {{ "%.1f"|format(statistiky['rotujici']['mesic']) }} h</p>
+                    <p><strong>Rok:</strong> {{ "%.1f"|format(statistiky['rotujici']['rok']) }} h</p>
+                    <p><strong>Počet:</strong> {{ statistiky['rotujici']['pocet'] }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Nedělní služby</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Týden:</strong> {{ "%.1f"|format(statistiky['nedele']['tyden']) }} h</p>
+                    <p><strong>Měsíc:</strong> {{ "%.1f"|format(statistiky['nedele']['mesic']) }} h</p>
+                    <p><strong>Rok:</strong> {{ "%.1f"|format(statistiky['nedele']['rok']) }} h</p>
+                    <p><strong>Počet:</strong> {{ statistiky['nedele']['pocet'] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Moje služby -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Moje služby ({{ rok }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if sluzby %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Den</th>
+                                    <th>Oddělení</th>
+                                    <th>Čas</th>
+                                    <th>Typ</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sluzba in sluzby %}
+                                <tr>
+                                    <td>{{ sluzba.datum }}</td>
+                                    <td>{{ sluzba.den_nazev }}</td>
+                                    <td>{{ sluzba.oddeleni }}</td>
+                                    <td>{{ sluzba.hodina_od }} - {{ sluzba.hodina_do }}</td>
+                                    <td>
+                                        {% if sluzba.typ == 'fixni' %}
+                                        <span class="badge bg-primary">Fixní</span>
+                                        {% elif sluzba.typ == 'rotujici' %}
+                                        <span class="badge bg-success">Rotující</span>
+                                        {% elif sluzba.typ == 'nedele' %}
+                                        <span class="badge bg-info">Neděle</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sluzba.je_vynimka %}
+                                        <span class="badge bg-warning text-dark">Výjimka</span>
+                                        {% elif sluzba.je_vymena %}
+                                        <span class="badge bg-success">Výměna</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Standardní</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Nemáte žádné služby v roce {{ rok }}.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Moje výjimky a výměny -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Moje výjimky</h5>
+                </div>
+                <div class="card-body">
+                    {% if vynimky %}
+                    {% for vynimka in vynimky %}
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <strong>{{ vynimka.datum.strftime('%d.%m.%Y') }}</strong> - {{ vynimka.oddeleni }}<br>
+                            <small>{{ vynimka.hodina_od }} - {{ vynimka.hodina_do }}</small><br>
+                            {% if vynimka.poznamka %}
+                            <small class="text-muted">{{ vynimka.poznamka }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">Nemáte žádné výjimky.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Moje výměny</h5>
+                </div>
+                <div class="card-body">
+                    {% if vymeny %}
+                    {% for vymena in vymeny %}
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <strong>{{ vymena.sluzba1.datum.strftime('%d.%m.%Y') }}</strong> ↔ 
+                            <strong>{{ vymena.sluzba2.datum.strftime('%d.%m.%Y') }}</strong><br>
+                            {% if vymena.schvaleno %}
+                            <span class="badge bg-success">Schváleno</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Čeká na schválení</span>
+                            {% endif %}
+                            {% if vymena.poznamka %}
+                            <br><small class="text-muted">{{ vymena.poznamka }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">Nemáte žádné výměny.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

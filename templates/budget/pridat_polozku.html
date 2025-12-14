@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Přidat položku rozpočtu{% endblock %}
+
+{% block content %}
+<div class="container-fluid container-md mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 h-md-2">
+                <i class="fas fa-plus"></i> Přidat položku rozpočtu
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Nová položka rozpočtu</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="typ" class="form-label">Typ <span class="text-danger">*</span></label>
+                            <select name="typ" id="typ" class="form-select" required>
+                                <option value="naklad" selected>Náklad</option>
+                                <option value="vynos">Výnos</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ucet" class="form-label">Účet <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="ucet" name="ucet" 
+                                   placeholder="Např. 501, 511, 602..." required maxlength="20">
+                            <small class="form-text text-muted">Číslo účtu</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="poducet" class="form-label">Podúčet</label>
+                            <input type="text" class="form-control" id="poducet" name="poducet" 
+                                   placeholder="Volitelné" maxlength="20">
+                            <small class="form-text text-muted">Podúčet (volitelné)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="popis" name="popis" 
+                                   placeholder="Název položky rozpočtu" required maxlength="300">
+                            <small class="form-text text-muted">Popis položky rozpočtu</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="castka" class="form-label">Celkový rozpočet <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="castka" name="castka" 
+                                       step="0.01" min="0" value="0" required>
+                                <span class="input-group-text">Kč</span>
+                            </div>
+                            <small class="form-text text-muted">Celková částka rozpočtu pro tuto položku</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Uložit
+                            </button>
+                            <a href="{{ url_for('budget.seznam_polozek') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

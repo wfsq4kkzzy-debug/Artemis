@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Dokumentace databáze{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-database"></i> Dokumentace databáze</h1>
+            <p class="text-muted">Přehled všech tabulek, jejich struktury a vztahů</p>
+        </div>
+    </div>
+
+    <!-- Přehled tabulek -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-table"></i> Přehled tabulek</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tabulka</th>
+                                    <th>Počet záznamů</th>
+                                    <th>Modul</th>
+                                </tr>
+                            </thead>
+                    <tbody>
+                        {% for table_name in tables_info.keys()|sort(attribute='lower') %}
+                        {% set count = table_counts.get(table_name, 0) %}
+                        {% set module = table_name.split('_')[0] if '_' in table_name else 'core' %}
+                                <tr>
+                                    <td><code>{{ table_name }}</code></td>
+                                    <td><span class="badge bg-info">{{ count }}</span></td>
+                                    <td>
+                                        {% if 'budget' in table_name or 'uctova' in table_name or 'rozpoctova' or 'expense' in table_name or 'revenue' in table_name or 'monthly_budget' in table_name %}
+                                        <span class="badge bg-success">Budget</span>
+                                        {% elif 'projekt' in table_name or 'termin' in table_name or 'zprava' in table_name or 'znalost' in table_name or 'vydaj_projektu' in table_name %}
+                                        <span class="badge bg-warning text-dark">Projects</span>
+                                        {% elif 'zamestnanec' in table_name or 'personnel' in table_name %}
+                                        <span class="badge bg-primary">Personnel</span>
+                                        {% elif 'user' in table_name or 'shared_chat' in table_name or 'user_' in table_name %}
+                                        <span class="badge bg-info">Users</span>
+                                        {% elif 'sluzba' in table_name %}
+                                        <span class="badge bg-danger">Services</span>
+                                        {% elif 'ai_' in table_name %}
+                                        <span class="badge bg-secondary">AI</span>
+                                        {% elif 'changelog' in table_name %}
+                                        <span class="badge bg-dark">Docs</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">Core</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailní popis tabulek -->
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-info-circle"></i> Detailní struktura tabulek</h2>
+        </div>
+    </div>
+
+    {% for table_name in sorted_table_names %}
+    {% set info = tables_info[table_name] %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table"></i> <code>{{ table_name }}</code>
+                        <span class="badge bg-info ms-2">{{ table_counts.get(table_name, 0) }} záznamů</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Sloupce -->
+                    <h6><i class="fas fa-columns"></i> Sloupce</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Název</th>
+                                    <th>Typ</th>
+                                    <th>Null</th>
+                                    <th>Výchozí hodnota</th>
+                                    <th>Popis</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for col in info.columns %}
+                                <tr>
+                                    <td><code>{{ col['name'] }}</code>{% if col['name'] in info.primary_keys %} <span class="badge bg-primary">PK</span>{% endif %}</td>
+                                    <td><small>{{ col['type'] }}</small></td>
+                                    <td>{% if col['nullable'] %}<span class="text-muted">Ano</span>{% else %}<span class="text-danger">Ne</span>{% endif %}</td>
+                                    <td><small>{{ col.get('default', '-') }}</small></td>
+                                    <td>
+                                        {% if 'id' in col['name'] and 'foreign' not in col['name'] %}
+                                        Primární klíč
+                                        {% elif 'id' in col['name'] %}
+                                        Cizí klíč
+                                        {% elif 'datum' in col['name'] or 'created' in col['name'] or 'updated' in col['name'] %}
+                                        Datum/čas
+                                        {% elif 'aktivni' in col['name'] or 'active' in col['name'] %}
+                                        Aktivní flag
+                                        {% elif 'poznamka' in col['name'] or 'popis' in col['name'] or 'content' in col['name'] or 'obsah' in col['name'] %}
+                                        Textový popis
+                                        {% elif 'castka' in col['name'] or 'rozpocet' in col['name'] or 'plat' in col['name'] or 'sazba' in col['name'] %}
+                                        Číselná hodnota (peníze)
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Foreign Keys -->
+                    {% if info.foreign_keys %}
+                    <h6><i class="fas fa-link"></i> Cizí klíče (Foreign Keys)</h6>
+                    <ul class="list-group mb-3">
+                        {% for fk in info.foreign_keys %}
+                        <li class="list-group-item">
+                            <code>{{ fk['constrained_columns']|join(', ') }}</code> 
+                            → <code>{{ fk['referred_table'] }}.{{ fk['referred_columns']|join(', ') }}</code>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <!-- Unique Constraints -->
+                    {% if info.unique_constraints %}
+                    <h6><i class="fas fa-unlock-alt"></i> Unikátní omezení</h6>
+                    <ul class="list-group mb-3">
+                        {% for uc in info.unique_constraints %}
+                        <li class="list-group-item">
+                            <code>{{ uc['column_names']|join(', ') }}</code>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Vztahy mezi tabulkami -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Hlavní vztahy mezi tabulkami</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Personnel (Zaměstnanci)</h6>
+                    <ul>
+                        <li><code>zamestnanec_oon</code> → základní tabulka zaměstnanců</li>
+                        <li><code>user</code> → odkazuje na <code>zamestnanec_oon</code> (personnel_id)</li>
+                        <li><code>sluzba</code> → odkazuje na <code>zamestnanec_oon</code> (zamestnanec_id)</li>
+                        <li><code>expense</code> → odkazuje na <code>zamestnanec_oon</code> (personnel_id) pro mzdy</li>
+                    </ul>
+
+                    <h6>Budget (Rozpočet)</h6>
+                    <ul>
+                        <li><code>budget</code> → hlavní rozpočet</li>
+                        <li><code>budget_category</code> → kategorie (odkazuje na budget)</li>
+                        <li><code>budget_subcategory</code> → podkategorie (odkazuje na category)</li>
+                        <li><code>budget_item</code> → položky rozpočtu (odkazuje na budget, category, subcategory)</li>
+                        <li><code>expense</code> → výdaje (odkazuje na budget, budget_item, category, subcategory)</li>
+                        <li><code>revenue</code> → výnosy (odkazuje na budget, budget_item, category, subcategory)</li>
+                        <li><code>monthly_budget_item</code> → měsíční stavy položek (odkazuje na budget_item)</li>
+                    </ul>
+
+                    <h6>Projects (Projekty)</h6>
+                    <ul>
+                        <li><code>projekt</code> → hlavní tabulka projektů (odkazuje na user, zamestnanec_oon)</li>
+                        <li><code>vydaj_projektu</code> → výdaje projektu (odkazuje na projekt)</li>
+                        <li><code>termin</code> → termíny/milestones (odkazuje na projekt)</li>
+                        <li><code>zprava</code> → zprávy v projektu (odkazuje na projekt, user)</li>
+                        <li><code>znalost</code> → znalostní položky (odkazuje na projekt)</li>
+                        <li><code>user_project</code> → přiřazení uživatelů k projektům (odkazuje na user, projekt)</li>
+                        <li><code>project_share</code> → sdílení projektů (odkazuje na projekt, user)</li>
+                    </ul>
+
+                    <h6>Services (Služby)</h6>
+                    <ul>
+                        <li><code>sluzba_template</code> → šablony služeb (odkazuje na zamestnanec_oon)</li>
+                        <li><code>sluzba</code> → konkrétní služby (odkazuje na sluzba_template, zamestnanec_oon)</li>
+                        <li><code>sluzba_vynimka</code> → výjimky v službách (odkazuje na sluzba, zamestnanec_oon, user)</li>
+                        <li><code>sluzba_vymena</code> → výměny služeb (odkazuje na sluzba, zamestnanec_oon, user)</li>
+                    </ul>
+
+                    <h6>Users (Uživatelé)</h6>
+                    <ul>
+                        <li><code>user</code> → uživatelé (odkazuje na zamestnanec_oon)</li>
+                        <li><code>user_project</code> → přiřazení k projektům (odkazuje na user, projekt)</li>
+                        <li><code>user_connection</code> → propojení uživatelů (odkazuje na user)</li>
+                        <li><code>shared_chat</code> → sdílené AI chaty (odkazuje na user, ai_session)</li>
+                        <li><code>user_message</code> → zprávy mezi uživateli (odkazuje na user)</li>
+                        <li><code>user_notification</code> → notifikace (odkazuje na user)</li>
+                    </ul>
+
+                    <h6>AI (AI Asistent)</h6>
+                    <ul>
+                        <li><code>ai_employee</code> → zaměstnanci v AI modulu</li>
+                        <li><code>ai_session</code> → AI konverzační relace (odkazuje na ai_employee)</li>
+                        <li><code>ai_message</code> → zprávy v AI konverzaci (odkazuje na ai_session)</li>
+                        <li><code>ai_knowledge</code> → znalostní databáze (odkazuje na ai_employee)</li>
+                        <li><code>ai_service</code> → záznamy služeb (odkazuje na ai_session)</li>
+                        <li><code>ai_memory</code> → paměť AI (odkazuje na ai_employee)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('docs.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět na dokumentaci
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

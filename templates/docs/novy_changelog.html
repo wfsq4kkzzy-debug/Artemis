@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Nový log změny{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1><i class="fas fa-plus-circle"></i> Přidat log změny</h1>
+            
+            <form method="POST" class="mt-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="verze" class="form-label">Verze</label>
+                        <input type="text" class="form-control" id="verze" name="verze" placeholder="Např. 0.76">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="typ" class="form-label">Typ změny *</label>
+                        <select class="form-select" id="typ" name="typ" required>
+                            {% for typ_value, typ_label in typy %}
+                            <option value="{{ typ_value }}">{{ typ_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="modul" class="form-label">Modul</label>
+                        <select class="form-select" id="modul" name="modul">
+                            <option value="">-- Všeobecné --</option>
+                            {% for modul in moduly_list %}
+                            <option value="{{ modul }}">{{ modul }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="autor" class="form-label">Autor</label>
+                        <input type="text" class="form-control" id="autor" name="autor" placeholder="Jméno autora">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="nadpis" class="form-label">Nadpis *</label>
+                    <input type="text" class="form-control" id="nadpis" name="nadpis" required placeholder="Krátký popis změny">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="popis" class="form-label">Popis *</label>
+                    <textarea class="form-control" id="popis" name="popis" rows="5" required placeholder="Podrobný popis změny..."></textarea>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('docs.changelog') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Přidat log
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

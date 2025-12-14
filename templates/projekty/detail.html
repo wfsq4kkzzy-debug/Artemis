@@ -2,14 +2,169 @@
 
 {% block title %}{{ projekt.nazev }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .project-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 1.5rem;
+    }
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .info-card h5 {
+        color: white;
+        margin-bottom: 1rem;
+    }
+    .stat-box {
+        background: rgba(255,255,255,0.15);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+    }
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    .message-board {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    .message-item {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-left: 4px solid #007bff;
+    }
+    .message-item.user-0 { border-left-color: #007bff; }
+    .message-item.user-1 { border-left-color: #28a745; }
+    .message-item.user-2 { border-left-color: #ffc107; }
+    .message-item.user-3 { border-left-color: #dc3545; }
+    .message-item.user-4 { border-left-color: #6f42c1; }
+    .message-item.user-5 { border-left-color: #fd7e14; }
+    .message-item.user-6 { border-left-color: #20c997; }
+    .message-item.user-7 { border-left-color: #e83e8c; }
+    .message-item.warning {
+        border-left-color: #ffc107;
+    }
+    .message-item.info {
+        border-left-color: #17a2b8;
+    }
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .message-author {
+        font-weight: 600;
+        color: #333;
+    }
+    .message-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .message-content {
+        color: #555;
+        line-height: 1.6;
+    }
+    .menu-tile {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .menu-tile:hover {
+        border-color: #007bff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+    .menu-tile-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #007bff;
+    }
+    .menu-tile-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    .menu-tile-desc {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .visual-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .visual-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .expense-chart {
+        height: 100px;
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .expense-bar {
+        flex: 1;
+        background: linear-gradient(180deg, #dc3545 0%, #c82333 100%);
+        border-radius: 4px 4px 0 0;
+        min-height: 20px;
+        position: relative;
+    }
+    .expense-bar-label {
+        position: absolute;
+        bottom: -20px;
+        left: 0;
+        right: 0;
+        font-size: 0.7rem;
+        text-align: center;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">
+    <!-- Hlavička projektu -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-12 col-md-8">
             <h1>{{ projekt.nazev }}</h1>
-            <p class="text-muted">{{ projekt.popis }}</p>
-            <div>
-                <span class="badge bg-info">Vedoucí: {{ projekt.vedouci or 'Není přiřazen' }}</span>
+            <p class="text-muted">{{ projekt.popis or 'Bez popisu' }}</p>
+            <div class="mb-2">
                 {% if projekt.status == 'planovani' %}
                     <span class="badge bg-secondary">Plánování</span>
                 {% elif projekt.status == 'rozpracovani' %}
@@ -19,376 +174,273 @@
                 {% else %}
                     <span class="badge bg-danger">{{ projekt.status }}</span>
                 {% endif %}
+                {% if projekt.created_by_user %}
+                    <span class="badge bg-info ms-2">
+                        <i class="fas fa-user-plus"></i> Založil: {{ projekt.created_by_user.jmeno_prijmeni }}
+                    </span>
+                {% elif projekt.created_by_personnel %}
+                    <span class="badge bg-info ms-2">
+                        <i class="fas fa-user-plus"></i> Založil: {{ projekt.created_by_personnel.jmeno_plne }}
+                    </span>
+                {% endif %}
             </div>
         </div>
-        <div class="col-md-6 text-end">
-            <a href="{{ url_for('projects.upravit', projekt_id=projekt.id) }}" class="btn btn-outline-primary">
-                <i class="fas fa-edit"></i> Upravit
-            </a>
-            <form method="POST" action="{{ url_for('projects.smazat', projekt_id=projekt.id) }}" 
-                  onsubmit="return confirm('Opravdu chcete smazat projekt \'{{ projekt.nazev }}\'?\\n\\nTato akce je nevratná a smaže:\\n- Všechny rozpočtové položky\\n- Všechny výdaje\\n- Všechny termíny\\n- Všechny zprávy\\n- Všechny znalosti\\n\\nPokračovat?');" 
-                  style="display: inline;">
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="fas fa-trash"></i> Smazat projekt
-                </button>
-            </form>
-            <a href="{{ url_for('projects.seznam') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Zpět
-            </a>
-        </div>
-    </div>
-
-    <!-- Přehled rozpočtu s vizualizací -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-line"></i> Přehled rozpočtu projektu
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center mb-3">
-                        <div class="col-md-3">
-                            <h6 class="text-muted mb-2">Celkový rozpočet</h6>
-                            <h3 class="text-primary mb-0">{{ "{:,.2f}".format(projekt.rozpocet_float) }} Kč</h3>
-                            <small class="text-muted">
-                                <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}" class="text-decoration-none">
-                                    <i class="fas fa-edit"></i> Upravit
-                                </a>
-                            </small>
-                        </div>
-                        <div class="col-md-3">
-                            <h6 class="text-muted mb-2">Vydaje</h6>
-                            <h3 class="text-danger mb-0">{{ "{:,.2f}".format(projekt.celkove_vydaje) }} Kč</h3>
-                            <small class="text-muted">{{ expenses|length }} výdajů</small>
-                        </div>
-                        <div class="col-md-3">
-                            <h6 class="text-muted mb-2">Zbývá</h6>
-                            <h3 class="{% if projekt.zbytek < 0 %}text-danger{% else %}text-success{% endif %} mb-0">
-                                {{ "{:,.2f}".format(projekt.zbytek) }} Kč
-                            </h3>
-                            {% if projekt.zbytek < 0 %}
-                                <small class="text-danger">
-                                    <i class="fas fa-exclamation-triangle"></i> Překročeno
-                                </small>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-3">
-                            <h6 class="text-muted mb-2">Čerpání</h6>
-                            <h3 class="mb-0">{{ "%.1f"|format(projekt.procento_vycerpano) }}%</h3>
-                            <div class="progress mt-2" style="height: 20px;">
-                                {% set procento = projekt.procento_vycerpano %}
-                                <div class="progress-bar 
-                                    {% if procento <= 50 %}bg-success
-                                    {% elif procento <= 80 %}bg-warning
-                                    {% else %}bg-danger{% endif %}" 
-                                    role="progressbar" 
-                                    style="width: {{ min(100, procento) }}%"
-                                    aria-valuenow="{{ procento }}" 
-                                    aria-valuemin="0" 
-                                    aria-valuemax="100">
-                                    <strong>{{ "%.1f"|format(procento) }}%</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12 text-center">
-                            <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-calculator"></i> Správa rozpočtu
-                            </a>
-                            <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-outline-success">
-                                <i class="fas fa-money-bill"></i> Správa výdajů
-                            </a>
-                        </div>
-                    </div>
-                </div>
+        <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+            <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                <a href="{{ url_for('projects.sdilet_projekt', projekt_id=projekt.id) }}" class="btn btn-outline-success">
+                    <i class="fas fa-share-alt"></i> <span class="d-none d-sm-inline">Sdílet</span>
+                </a>
+                <a href="{{ url_for('projects.upravit', projekt_id=projekt.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> <span class="d-none d-sm-inline">Upravit</span>
+                </a>
+                <form method="POST" action="{{ url_for('projects.smazat', projekt_id=projekt.id) }}" 
+                      onsubmit="return confirm('⚠️ OPRAVDU CHCETE SMAZAT PROJEKT \'{{ projekt.nazev }}\'?\\n\\n🔴 Tato akce je NEVRATNÁ a smaže:\\n\\n📋 V projektu:\\n- Všechny rozpočtové položky projektu\\n- Všechny výdaje projektu ({{ expenses|length }} výdajů)\\n- Všechny termíny\\n- Všechny zprávy\\n\\n💰 V hlavním rozpočtu:\\n- Všechny výdaje tohoto projektu v rozpočtu\\n\\nPokračovat?');" 
+                      style="display: inline;">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> <span class="d-none d-sm-inline">Smazat</span>
+                    </button>
+                </form>
+                <a href="{{ url_for('projects.seznam') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> <span class="d-none d-sm-inline">Zpět</span>
+                </a>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Levý panel - Správa projektu -->
-        <div class="col-md-5">
-            <div class="nav flex-column nav-pills" role="tablist">
-                <button class="nav-link active" id="tab-rozpocet" data-bs-toggle="pill" data-bs-target="#content-rozpocet" type="button" role="tab">
-                    <i class="fas fa-calculator"></i> Rozpočet
-                </button>
-                <button class="nav-link" id="tab-vydaje" data-bs-toggle="pill" data-bs-target="#content-vydaje" type="button" role="tab">
-                    <i class="fas fa-money-bill"></i> Výdaje
-                </button>
-                <button class="nav-link" id="tab-terminy" data-bs-toggle="pill" data-bs-target="#content-terminy" type="button" role="tab">
-                    <i class="fas fa-calendar"></i> Termíny
-                </button>
-                <button class="nav-link" id="tab-znalosti" data-bs-toggle="pill" data-bs-target="#content-znalosti" type="button" role="tab">
-                    <i class="fas fa-lightbulb"></i> Znalosti
-                </button>
-            </div>
-
-            <!-- ROZPOČET -->
-            <div class="tab-pane fade show active mt-3" id="content-rozpocet" role="tabpanel">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Projekt má jeden celkový rozpočet, ke kterému se přidávají výdaje.
+        <!-- Levá strana - Dlaždice s menu -->
+        <div class="col-12 col-lg-6">
+            <!-- Grafické znázornění výdajů, termínů a vzkazů -->
+            <div class="row g-3 mb-3">
+                <!-- Výdaje -->
+                <div class="col-12 col-md-4">
+                    <div class="visual-card text-center">
+                        <div class="visual-icon text-danger">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <h4 class="mb-1">{{ expenses|length }}</h4>
+                        <div class="text-muted small">Výdajů</div>
+                        {% if expenses|length > 0 %}
+                        <div class="mt-2">
+                            <strong class="text-danger">{{ "{:,.0f}".format(projekt.celkove_vydaje) }} Kč</strong>
+                        </div>
+                        {% endif %}
+                        <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-sm btn-outline-danger mt-2">
+                            <i class="fas fa-eye"></i> Zobrazit
+                        </a>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <strong>Rozpočet projektu:</strong>
-                    <h4 class="text-primary">{{ "{:,.2f}".format(projekt.rozpocet_float) }} Kč</h4>
+                
+                <!-- Termíny -->
+                <div class="col-12 col-md-4">
+                    <div class="visual-card text-center">
+                        <div class="visual-icon text-warning">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h4 class="mb-1">{{ milestones|length }}</h4>
+                        <div class="text-muted small">Termínů</div>
+                        {% if milestones %}
+                        {% set splneno = milestones|selectattr('status', 'equalto', 'splneno')|list|length %}
+                        {% set aktivni = milestones|rejectattr('status', 'equalto', 'splneno')|list|length %}
+                        <div class="mt-2">
+                            <span class="badge bg-success">{{ splneno }} splněno</span>
+                            <span class="badge bg-warning text-dark">{{ aktivni }} aktivních</span>
+                        </div>
+                        {% endif %}
+                        <a href="{{ url_for('projects.terminy', projekt_id=projekt.id) }}" class="btn btn-sm btn-outline-warning mt-2">
+                            <i class="fas fa-eye"></i> Zobrazit
+                        </a>
+                    </div>
                 </div>
-                <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}" class="btn btn-primary w-100">
-                    <i class="fas fa-calculator"></i> Nastavit/Upravit rozpočet
-                </a>
+                
+                <!-- Vzkazy -->
+                <div class="col-12 col-md-4">
+                    <div class="visual-card text-center">
+                        <div class="visual-icon text-info">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h4 class="mb-1">{{ messages|length if messages else 0 }}</h4>
+                        <div class="text-muted small">Vzkazů</div>
+                        <div class="mt-2">
+                            <small class="text-muted">Na nástěnce</small>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- VÝDAJE -->
-            <div class="tab-pane fade mt-3" id="content-vydaje" role="tabpanel">
-                <h5>Poslední výdaje</h5>
-                {% if expenses %}
-                    <div class="list-group">
-                        {% for e in expenses[:5] %}
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <strong>{{ e['popis'] }}</strong>
-                                    <br><small class="text-muted">{{ e['datum'][:10] if e['datum'] else 'Bez data' }}</small>
-                                </div>
-                                <span class="badge bg-danger">{{ "%.2f"|format(e['castka']) }} Kč</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">Žádné výdaje</p>
-                {% endif %}
-                <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="btn btn-success w-100 mt-3">
-                    <i class="fas fa-plus"></i> Přidat výdaj
-                </a>
+            <!-- Menu dlaždice -->
+            <div class="row g-3">
+                <div class="col-6 col-md-4">
+                    <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}" class="menu-tile">
+                        <div class="menu-tile-icon"><i class="fas fa-calculator"></i></div>
+                        <div class="menu-tile-title">Rozpočet</div>
+                        <div class="menu-tile-desc">Správa rozpočtu</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4">
+                    <a href="{{ url_for('projects.vydaje', projekt_id=projekt.id) }}" class="menu-tile">
+                        <div class="menu-tile-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="menu-tile-title">Výdaje</div>
+                        <div class="menu-tile-desc">{{ expenses|length }} výdajů</div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4">
+                    <a href="{{ url_for('projects.terminy', projekt_id=projekt.id) }}" class="menu-tile">
+                        <div class="menu-tile-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="menu-tile-title">Termíny</div>
+                        <div class="menu-tile-desc">{{ milestones|length }} termínů</div>
+                    </a>
+                </div>
             </div>
 
-            <!-- TERMÍNY -->
-            <div class="tab-pane fade mt-3" id="content-terminy" role="tabpanel">
-                <h5>Termíny a milestony</h5>
-                {% if milestones %}
-                    <div class="list-group">
-                        {% for t in milestones %}
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between">
-                                <strong>{{ t['nazev'] }}</strong>
-                                {% if t['status'] == 'splneno' %}
-                                    <span class="badge bg-success">Splněno</span>
-                                {% elif t['status'] == 'zmeska' %}
-                                    <span class="badge bg-danger">Zmeška</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ t['status'] }}</span>
-                                {% endif %}
-                            </div>
-                            <small class="text-muted">{{ t['datum_planovane'][:10] }}</small>
-                        </div>
-                        {% endfor %}
+            <!-- Sdílení projektu -->
+            {% if shares %}
+            <div class="project-card">
+                <div class="card-header project-card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-share-alt"></i> Sdíleno s</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Uživatel</th>
+                                    <th>Oprávnění</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for share in shares %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {% if share.shared_with_user %}
+                                                {{ share.shared_with_user.get('jmeno_prijmeni', share.shared_with_user.get('username', 'Neznámý uživatel')) }}
+                                            {% else %}
+                                                Neznámý uživatel
+                                            {% endif %}
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        {% if share.permission == 'write' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-edit"></i> Úprava
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-eye"></i> Zobrazení
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                {% else %}
-                    <p class="text-muted">Žádné termíny</p>
-                {% endif %}
-                <a href="{{ url_for('projects.terminy', projekt_id=projekt.id) }}" class="btn btn-sm btn-primary mt-3 w-100">
-                    <i class="fas fa-plus"></i> Přidat termín
-                </a>
-            </div>
-
-            <!-- ZNALOSTI -->
-            <div class="tab-pane fade mt-3" id="content-znalosti" role="tabpanel">
-                <h5>Znalostní položky</h5>
-                {% if knowledge %}
-                    <div class="list-group">
-                        {% for z in knowledge[:5] %}
-                        <div class="list-group-item">
-                            <strong>{{ z['nazev'] }}</strong>
-                            <small class="text-muted d-block">{{ z['obsah'][:80] }}...</small>
-                        </div>
-                        {% endfor %}
+                    <div class="mt-3">
+                        <a href="{{ url_for('projects.sdilet_projekt', projekt_id=projekt.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-share-alt"></i> Spravovat sdílení
+                        </a>
                     </div>
-                {% else %}
-                    <p class="text-muted">Žádné znalosti</p>
-                {% endif %}
+                </div>
             </div>
+            {% endif %}
         </div>
 
-        <!-- Pravý panel - AI Asistent -->
-        <div class="col-md-7">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-robot"></i> AI Asistent - {{ projekt.nazev }}
-                    </h5>
+        <!-- Pravá strana - Nástěnka (50% šířky) -->
+        <div class="col-12 col-lg-6">
+            <div class="message-board">
+                <h5 class="mb-3">
+                    <i class="fas fa-comments"></i> Nástěnka
+                    <span class="badge bg-primary ms-2">{{ messages|length if messages else 0 }}</span>
+                </h5>
+
+                <!-- Formulář pro přidání vzkazu -->
+                <div class="mb-4 p-3 bg-white rounded" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    {% if current_user %}
+                        <div class="mb-2 small text-muted">
+                            <i class="fas fa-user"></i> Píšete jako: <strong>{{ current_user.jmeno_prijmeni }}</strong>
+                        </div>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('projects.pridat_vzkaz', projekt_id=projekt.id) }}">
+                        <div class="mb-2">
+                            <textarea class="form-control form-control-sm" 
+                                      id="vzkaz_obsah" 
+                                      name="obsah" 
+                                      rows="3" 
+                                      placeholder="Napište vzkaz pro tým..."
+                                      required></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="to_user_id" class="form-label small">Komu (volitelné - prázdné = všem)</label>
+                            <select class="form-select form-select-sm" id="to_user_id" name="to_user_id">
+                                <option value="">Všem uživatelům</option>
+                                {% if uzivatele_projektu %}
+                                {% for uzivatel in uzivatele_projektu %}
+                                {% if uzivatel.id != current_user_id %}
+                                <option value="{{ uzivatel.id }}">
+                                    {{ uzivatel.jmeno_prijmeni }} ({{ uzivatel.username }})
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-paper-plane"></i> Odeslat vzkaz
+                        </button>
+                    </form>
+                    <div class="mt-2 small text-muted">
+                        <i class="fas fa-info-circle"></i> Všechny konverzace se ukládají do databáze pro pozdější dohledání.
+                    </div>
                 </div>
-                <div class="card-body" style="height: 600px; display: flex; flex-direction: column;">
-                    <!-- Chat history -->
-                    <div class="flex-grow-1 overflow-auto border rounded p-3 mb-3" id="chatMessages" style="background: #f8f9fa; min-height: 400px;">
-                        {% if chat_history %}
-                            {% for msg in chat_history %}
-                                <div class="mb-3 d-flex {% if msg.autor == 'uživatel' %}justify-content-end{% else %}justify-content-start{% endif %}">
-                                    <div class="message-bubble {% if msg.autor == 'uživatel' %}user-message{% else %}assistant-message{% endif %}" 
-                                         style="max-width: 70%; {% if msg.autor == 'uživatel' %}background: #007bff; color: white; border-radius: 18px 18px 4px 18px;{% else %}background: #e9ecef; color: #333; border-radius: 18px 18px 18px 4px;{% endif %} padding: 10px 15px; word-wrap: break-word; white-space: pre-wrap;">
-                                        {{ msg.obsah }}
+
+                <!-- Seznam vzkazů -->
+                {% if messages and messages|length > 0 %}
+                    <div>
+                        {% for msg in messages|reverse %}
+                        {% set user_index = loop.index0 % 8 %}
+                        <div class="message-item user-{{ user_index }} {% if msg.get('typ') == 'upozorneni' %}warning{% elif msg.get('typ') == 'aktualizace' %}info{% endif %}">
+                            <div class="message-header">
+                                <div>
+                                    <span class="message-author">
+                                        {% if msg.get('created_by_initials') %}
+                                            <span class="badge bg-secondary me-1">{{ msg.created_by_initials }}</span>
+                                        {% endif %}
+                                        {{ msg.get('autor', 'Neznámý autor') }}
+                                        {% if msg.get('to_user') %}
+                                            <i class="fas fa-arrow-right text-muted ms-1"></i>
+                                            <small class="text-muted">{{ msg.to_user.jmeno_prijmeni }}</small>
+                                        {% else %}
+                                            <span class="badge bg-info ms-1">Všem</span>
+                                        {% endif %}
+                                    </span>
+                                    <div class="message-time">
+                                        <i class="fas fa-clock"></i> {{ msg.get('datum', '')[:16] if msg.get('datum') else 'Neznámé datum' }}
                                     </div>
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center text-muted mt-5" id="welcomeMessage">
-                                <p><strong>Vítej!</strong></p>
-                                <p>Jsem zde, abych ti pomohl se správou projektu {{ projekt.nazev }}.</p>
-                                <p>Ptej se mě na:</p>
-                                <ul class="list-unstyled">
-                                    <li>Přidávání rozpočtu a výdajů</li>
-                                    <li>Správě termínů</li>
-                                    <li>Záznamu poznatků a znalostí</li>
-                                    <li>Analýze čerpání rozpočtu</li>
-                                </ul>
+                                {% if msg.get('typ') == 'upozorneni' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </span>
+                                {% elif msg.get('typ') == 'aktualizace' %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                                {% endif %}
                             </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Input area -->
-                    <div class="border-top pt-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="messageInput" placeholder="Napiš zprávu..." autocomplete="off" onkeypress="if(event.key === 'Enter') sendMessage()">
-                            <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
+                            <div class="message-content">
+                                {{ msg.get('obsah', '')|nl2br|safe }}
+                            </div>
                         </div>
-                        <small class="text-muted mt-2 d-block">
-                            Tokeny: <span id="tokenCount">0</span> | Projekt: <span id="projectId">{{ projekt.id }}</span>
-                        </small>
+                        {% endfor %}
                     </div>
-                </div>
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle"></i> Zatím nejsou žádné vzkazy. Buďte první!
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    const projectId = {{ projekt.id }};
-    const sessionId = Math.floor(Math.random() * 10000) + 1;
-    const employeeId = 1;
-
-    async function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const message = input.value.trim();
-        const sendBtn = document.getElementById('sendBtn');
-        
-        if (!message) return;
-        
-        // Skrýt welcome message pokud existuje
-        const welcomeMsg = document.getElementById('welcomeMessage');
-        if (welcomeMsg) welcomeMsg.style.display = 'none';
-        
-        // Disable input a button
-        input.disabled = true;
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        
-        // Add user message to chat
-        const chatBox = document.getElementById('chatMessages');
-        const userMsg = document.createElement('div');
-        userMsg.className = 'mb-3 d-flex justify-content-end';
-        userMsg.innerHTML = `
-            <div class="message-bubble user-message" style="max-width: 70%; background: #007bff; color: white; padding: 10px 15px; border-radius: 18px 18px 4px 18px; word-wrap: break-word;">
-                ${escapeHtml(message)}
-            </div>
-        `;
-        chatBox.appendChild(userMsg);
-        input.value = '';
-        
-        // Add loading indicator
-        const loadingMsg = document.createElement('div');
-        loadingMsg.className = 'mb-3 d-flex justify-content-start';
-        loadingMsg.id = 'loadingMessage';
-        loadingMsg.innerHTML = `
-            <div class="message-bubble assistant-message" style="max-width: 70%; background: #e9ecef; color: #333; padding: 10px 15px; border-radius: 18px 18px 18px 4px;">
-                <i class="fas fa-spinner fa-spin"></i> Přemýšlím...
-            </div>
-        `;
-        chatBox.appendChild(loadingMsg);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        
-        try {
-            const response = await fetch('/ai/send-message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: message,
-                    session_id: sessionId,
-                    employee_id: employeeId,
-                    projekt_id: projectId
-                })
-            });
-            
-            const data = await response.json();
-            
-            // Remove loading indicator
-            loadingMsg.remove();
-            
-            // Add assistant response
-            const assistantMsg = document.createElement('div');
-            assistantMsg.className = 'mb-3 d-flex justify-content-start';
-            assistantMsg.innerHTML = `
-                <div class="message-bubble assistant-message" style="max-width: 70%; background: #e9ecef; color: #333; padding: 10px 15px; border-radius: 18px 18px 18px 4px; word-wrap: break-word; white-space: pre-wrap;">
-                    ${escapeHtml(data.assistant_message || data.error || 'Chyba při komunikaci s AI')}
-                </div>
-            `;
-            chatBox.appendChild(assistantMsg);
-            
-            // Update token count
-            document.getElementById('tokenCount').textContent = data.tokens_used || 0;
-            
-            // Auto-scroll
-            chatBox.scrollTop = chatBox.scrollHeight;
-            
-            // Reload page if budget/expense was added/updated/deleted (to show updated data)
-            if (data.expense_added || data.budget_updated || data.expense_updated || data.expense_deleted) {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else if (data.assistant_message && (
-                data.assistant_message.includes('✅') && (
-                    data.assistant_message.includes('přidán') || 
-                    data.assistant_message.includes('přidána') ||
-                    data.assistant_message.includes('upraven') ||
-                    data.assistant_message.includes('smazán') ||
-                    data.assistant_message.includes('nastaven')
-                )
-            )) {
-                // Fallback - pokud flagy nejsou, ale zpráva obsahuje úspěch
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            loadingMsg.remove();
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'mb-3 d-flex justify-content-start';
-            errorMsg.innerHTML = `
-                <div class="message-bubble assistant-message" style="max-width: 70%; background: #f8d7da; color: #721c24; padding: 10px 15px; border-radius: 18px 18px 18px 4px;">
-                    <i class="fas fa-exclamation-triangle"></i> Chyba: ${escapeHtml(error.message)}
-                </div>
-            `;
-            chatBox.appendChild(errorMsg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        } finally {
-            // Re-enable input a button
-            input.disabled = false;
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-            input.focus();
-        }
-    }
-    
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-</script>
 {% endblock %}

@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Služba dne - {{ datum.strftime('%d.%m.%Y') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .service-day-card {
+        border-left: 4px solid #007bff;
+        margin-bottom: 1.5rem;
+    }
+    .service-day-card.detske {
+        border-left-color: #28a745;
+    }
+    .service-day-card.dospělé {
+        border-left-color: #dc3545;
+    }
+    .day-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .event-form {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="day-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1><i class="fas fa-calendar-day"></i> {{ den_nazev }}, {{ datum.strftime('%d.%m.%Y') }}</h1>
+                        <p class="mb-0">Služba dne - karty pro každé oddělení</p>
+                    </div>
+                    <a href="{{ url_for('services.index') }}" class="btn btn-light">
+                        <i class="fas fa-arrow-left"></i> Zpět na kalendář
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Karty pro každé oddělení -->
+    {% for oddeleni, sluzby_oddeleni in sluzby_po_oddelenich.items() %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card service-day-card {{ oddeleni }}">
+                <div class="card-header bg-{% if oddeleni == 'detske' %}success{% else %}danger{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if oddeleni == 'detske' %}child{% else %}book{% endif %}"></i> 
+                        {% if oddeleni == 'detske' %}Dětské oddělení
+                        {% elif oddeleni == 'dospělé' %}Dospělé oddělení
+                        {% else %}{{ oddeleni }}{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tlačítko pro přidání nové služby -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-success" onclick="pridatNovouSluzbu('{{ oddeleni }}')">
+                            <i class="fas fa-plus"></i> Přidat službu
+                        </button>
+                    </div>
+                    
+                    {% for sluzba in sluzby_oddeleni %}
+                    {% set zmena = zmeny_dne|selectattr('sluzba_id', 'equalto', sluzba.id)|first %}
+                    
+                    <!-- Formulář pro úpravu služby -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title mb-0">
+                                    {% if sluzba.typ == 'fixni' %}<span class="badge bg-success">Fixní služba</span>
+                                    {% elif sluzba.typ == 'rotujici' %}<span class="badge bg-warning text-dark">Rotující služba</span>
+                                    {% elif sluzba.typ == 'nedele' %}<span class="badge bg-danger">Neděle</span>
+                                    {% endif %}
+                                    {% if zmena %}<span class="badge bg-info">Změna</span>{% endif %}
+                                    <strong class="ms-2">{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Nepřiřazeno' }}</strong>
+                                </h6>
+                                <form method="POST" action="{{ url_for('services.smazat_sluzbu', sluzba_id=sluzba.id) }}" 
+                                      style="display: inline;" onsubmit="return confirm('Opravdu chcete smazat tuto službu?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Smazat
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Formulář pro úpravu služby -->
+                            <form method="POST" action="{{ url_for('services.upravit_sluzbu', sluzba_id=sluzba.id) }}" id="upravit-form-{{ sluzba.id }}">
+                                <input type="hidden" name="datum_str" value="{{ datum_str }}">
+                                
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Zaměstnanec *</label>
+                                        <select class="form-select form-select-sm" name="zamestnanec_id" required>
+                                            <option value="">-- Vyberte --</option>
+                                            {% for zamestnanec in zamestnanci %}
+                                            <option value="{{ zamestnanec.id }}" 
+                                                {% if sluzba.zamestnanec_id == zamestnanec.id %}selected{% endif %}>
+                                                {{ zamestnanec.jmeno_plne }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">Čas od *</label>
+                                        <select class="form-select form-select-sm" name="hodina_od" required>
+                                            {% for hodina in hodiny %}
+                                            <option value="{{ hodina }}" {% if sluzba.hodina_od == hodina %}selected{% endif %}>
+                                                {{ hodina }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">Čas do *</label>
+                                        <select class="form-select form-select-sm" name="hodina_do" required>
+                                            {% for hodina in hodiny %}
+                                            <option value="{{ hodina }}" {% if sluzba.hodina_do == hodina %}selected{% endif %}>
+                                                {{ hodina }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Poznámka</label>
+                                        <input type="text" class="form-control form-control-sm" name="poznamka" 
+                                               value="{{ sluzba.poznamka if sluzba.poznamka else '' }}" 
+                                               placeholder="Volitelné">
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                                            <i class="fas fa-save"></i> Uložit
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <!-- Formulář pro změnu (výjimku) -->
+                            {% if not zmena %}
+                            <div class="mt-2 pt-2 border-top">
+                                <small class="text-muted">Nebo vytvořit změnu (výjimku):</small>
+                                <form method="POST" action="{{ url_for('services.novy_zmena') }}" class="mt-2">
+                                    <input type="hidden" name="sluzba_id" value="{{ sluzba.id }}">
+                                    <input type="hidden" name="datum" value="{{ datum_str }}">
+                                    <input type="hidden" name="oddeleni" value="{{ oddeleni }}">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <select class="form-select form-select-sm" name="zamestnanec_id" required>
+                                                <option value="">-- Nový zaměstnanec --</option>
+                                                {% for zamestnanec in zamestnanci %}
+                                                <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-select form-select-sm" name="hodina_od" required>
+                                                {% for hodina in hodiny %}
+                                                <option value="{{ hodina }}">{{ hodina }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-select form-select-sm" name="hodina_do" required>
+                                                {% for hodina in hodiny %}
+                                                <option value="{{ hodina }}">{{ hodina }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-sm btn-outline-info w-100">
+                                                <i class="fas fa-exchange-alt"></i> Změna
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            {% else %}
+                            <div class="mt-2 pt-2 border-top">
+                                <div class="alert alert-info mb-2">
+                                    <strong>Změna:</strong> {{ zmena.zamestnanec.jmeno_plne if zmena.zamestnanec else 'N/A' }} 
+                                    ({{ zmena.hodina_od }} - {{ zmena.hodina_do }})
+                                </div>
+                                <form method="POST" action="{{ url_for('services.smazat_zmena', vynimka_id=zmena.id) }}" 
+                                      style="display: inline;" onsubmit="return confirm('Opravdu chcete smazat tuto změnu?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Smazat změnu
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Formulář pro události dne -->
+                            <div class="event-form mt-3">
+                                <h6><i class="fas fa-calendar-check"></i> Události dne</h6>
+                                <form method="POST" action="{{ url_for('services.ulozit_udalost') }}">
+                                    <input type="hidden" name="sluzba_id" value="{{ sluzba.id }}">
+                                    <input type="hidden" name="datum" value="{{ datum_str }}">
+                                    <input type="hidden" name="oddeleni" value="{{ oddeleni }}">
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Typ události</label>
+                                            <select class="form-select form-select-sm" name="typ_udalosti">
+                                                <option value="poznamka">Poznámka</option>
+                                                <option value="problem">Problém</option>
+                                                <option value="vymena">Výměna</option>
+                                                <option value="ostatni">Ostatní</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Čas</label>
+                                            <input type="time" class="form-control form-control-sm" name="cas_udalosti">
+                                        </div>
+                                        <div class="col-md-12 mb-2">
+                                            <label class="form-label">Popis</label>
+                                            <textarea class="form-control form-control-sm" name="popis" rows="2" placeholder="Popis události..."></textarea>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-plus"></i> Přidat událost
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                                
+                                <!-- Seznam událostí (zatím placeholder) -->
+                                <div class="mt-2">
+                                    <small class="text-muted">Události budou zobrazeny zde</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Pokud nejsou žádné služby -->
+    {% if not sluzby_po_oddelenich %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> V tento den nejsou žádné služby.
+                <button type="button" class="btn btn-sm btn-success ms-2" onclick="pridatNovouSluzbu('dospělé')">
+                    <i class="fas fa-plus"></i> Přidat službu
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Formulář pro přidání nové služby (skrytý, zobrazí se po kliknutí) -->
+    <div id="nova-sluzba-form" style="display: none;">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-plus"></i> Přidat novou službu</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('services.pridat_sluzbu_den') }}">
+                            <input type="hidden" name="datum" value="{{ datum_str }}">
+                            <input type="hidden" name="oddeleni" id="nova-sluzba-oddeleni" value="dospělé">
+                            
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Zaměstnanec *</label>
+                                    <select class="form-select" name="zamestnanec_id" required>
+                                        <option value="">-- Vyberte --</option>
+                                        {% for zamestnanec in zamestnanci %}
+                                        <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Čas od *</label>
+                                    <select class="form-select" name="hodina_od" required>
+                                        {% for hodina in hodiny %}
+                                        <option value="{{ hodina }}" {% if hodina == '08:00' %}selected{% endif %}>{{ hodina }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Čas do *</label>
+                                    <select class="form-select" name="hodina_do" required>
+                                        {% for hodina in hodiny %}
+                                        <option value="{{ hodina }}" {% if hodina == '16:00' %}selected{% endif %}>{{ hodina }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Typ služby</label>
+                                    <select class="form-select" name="typ">
+                                        <option value="fixni">Fixní</option>
+                                        <option value="rotujici">Rotující</option>
+                                        <option value="nedele">Neděle</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-plus"></i> Přidat
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="skrytNovouSluzbu()">
+                                        <i class="fas fa-times"></i> Zrušit
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function pridatNovouSluzbu(oddeleni) {
+    document.getElementById('nova-sluzba-oddeleni').value = oddeleni;
+    document.getElementById('nova-sluzba-form').style.display = 'block';
+    document.getElementById('nova-sluzba-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function skrytNovouSluzbu() {
+    document.getElementById('nova-sluzba-form').style.display = 'none';
+}
+</script>
+{% endblock %}

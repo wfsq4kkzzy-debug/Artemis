@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Správa nedělních služeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="fas fa-calendar-day"></i> Správa nedělních služeb</h1>
+                    <p class="text-muted">Rok {{ rok }} - přiřazení zaměstnanců k nedělním službám</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zpět
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Výpis nedělí -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar"></i> Neděle v roce {{ rok }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Dospělé oddělení</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for nedele_datum in nedele %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ nedele_datum.strftime('%d.%m.%Y') }}</strong><br>
+                                        <small class="text-muted">{{ nedele_datum.strftime('%A') }}</small>
+                                    </td>
+                                    <td>
+                                        {% set sluzby_dospele = nedele_sluzby.get(nedele_datum.isoformat(), []) %}
+                                        {% if sluzby_dospele %}
+                                            {% for sluzba in sluzby_dospele %}
+                                            <div class="card mb-2 border-left border-primary" style="border-left-width: 4px;">
+                                                <div class="card-body p-2">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <strong>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Nepřiřazeno' }}</strong><br>
+                                                            <small class="text-muted">14:00 - 17:00</small>
+                                                        </div>
+                                                        <div>
+                                                            <a href="{{ url_for('services.sluzba_dne', datum_str=nedele_datum.isoformat()) }}" 
+                                                               class="btn btn-sm btn-outline-primary" title="Otevřít kartu služby dne">
+                                                                <i class="fas fa-calendar-day"></i>
+                                                            </a>
+                                                            <form method="POST" action="{{ url_for('services.smazat_sluzbu', sluzba_id=sluzba.id) }}" 
+                                                                  onsubmit="return confirm('Opravdu chcete smazat tuto službu?');" style="display: inline;">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Smazat službu">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                        <span class="text-muted">Nepřiřazeno</span>
+                                        {% endif %}
+                                        
+                                        <!-- Formulář pro přiřazení uživatele -->
+                                        {% if zamestnanci %}
+                                        <form method="POST" action="{{ url_for('services.priradit_nedele_zamestnance', datum_str=nedele_datum.isoformat()) }}" class="mt-2">
+                                            <input type="hidden" name="oddeleni" value="dospělé">
+                                            <div class="input-group input-group-sm">
+                                                <select class="form-select" name="zamestnanec_id" required>
+                                                    <option value="">-- Vyberte uživatele --</option>
+                                                    {% for zamestnanec in zamestnanci %}
+                                                    <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-plus"></i> Přiřadit
+                                                </button>
+                                            </div>
+                                        </form>
+                                        {% else %}
+                                        <div class="alert alert-warning mt-2 mb-0" style="padding: 0.5rem;">
+                                            <small><i class="fas fa-exclamation-triangle"></i> Žádní uživatelé nemají zaškrtnuté "Slouží neděle"</small>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

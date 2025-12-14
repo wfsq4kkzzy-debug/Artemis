@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Setup AI Asistenta{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h1 class="display-4 mb-2">🤖</h1>
+                        <h2>Konfiguruj AI Asistenta</h2>
+                        <p class="text-muted">Potřebuješ API klíč od Anthropic</p>
+                    </div>
+
+                    <form id="setupForm">
+                        <div class="mb-4">
+                            <label for="apiKey" class="form-label"><strong>API Klíč</strong></label>
+                            <input 
+                                type="password" 
+                                class="form-control form-control-lg" 
+                                id="apiKey"
+                                placeholder="sk-ant-..."
+                                required
+                            >
+                            <small class="text-muted d-block mt-2">
+                                Klíč získáš na: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-check"></i> Uložit a Pokračovat
+                        </button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="alert alert-info">
+                        <h5>📖 Jak získat API klíč?</h5>
+                        <ol class="mb-0">
+                            <li>Jdi na <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></li>
+                            <li>Přihlas se nebo vytvoř účet</li>
+                            <li>Vytvoř nový projekt</li>
+                            <li>Přejdi do "API Keys"</li>
+                            <li>Klikni "Create Key"</li>
+                            <li>Zkopíruj klíč a vlepš sem</li>
+                        </ol>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h5>⚠️ Bezpečnost</h5>
+                        <p class="mb-0">
+                            Tvůj API klíč bude uložen v <code>.env</code> souboru.
+                            <strong>Nesdílej ho s nikým!</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('setupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const apiKey = document.getElementById('apiKey').value.trim();
+    
+    if (!apiKey) {
+        alert('Prosím, vložíš API klíč!');
+        return;
+    }
+
+    const btn = document.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ukládám...';
+
+    fetch('{{ url_for("ai_assistant.setup") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            api_key: apiKey
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ API klíč uložen! Nyní se můžeš začít chatovat.');
+            window.location.href = '{{ url_for("ai_assistant.index") }}';
+        } else {
+            alert('❌ Chyba: ' + data.error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Uložit a Pokračovat';
+        }
+    })
+    .catch(err => {
+        alert('❌ Chyba: ' + err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Uložit a Pokračovat';
+    });
+});
+
+// Automatické skrytí hesla a zobrazení klíče
+document.getElementById('apiKey').addEventListener('input', function() {
+    this.type = this.value ? 'text' : 'password';
+});
+</script>
+
+<style>
+.display-4 {
+    font-size: 4rem;
+}
+
+form input::-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset;
+}
+</style>
+{% endblock %}

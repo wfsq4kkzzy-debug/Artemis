@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Upravit fixní službu{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1><i class="fas fa-edit"></i> Upravit fixní službu</h1>
+            <p class="text-muted">Upravte fixní službu - přidejte nebo odeberte zaměstnance, změňte časy</p>
+            
+            <form method="POST" class="mt-4" id="upravitFixniForm">
+                <div class="mb-3">
+                    <label for="nazev" class="form-label">Název služby *</label>
+                    <input type="text" class="form-control" id="nazev" name="nazev" required value="{{ template.nazev }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="oddeleni" class="form-label">Oddělení *</label>
+                    <select class="form-select" id="oddeleni" name="oddeleni" required>
+                        <option value="detske" {% if template.oddeleni == 'detske' %}selected{% endif %}>Dětské</option>
+                        <option value="dospělé" {% if template.oddeleni == 'dospělé' %}selected{% endif %}>Dospělé</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="den_v_tydnu" class="form-label">Den v týdnu *</label>
+                    <select class="form-select" id="den_v_tydnu" name="den_v_tydnu" required>
+                        {% for den_id, den_nazev in dny_v_tydnu %}
+                        <option value="{{ den_id }}" {% if template.den_v_tydnu == den_id %}selected{% endif %}>{{ den_nazev }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Zaměstnanci -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label mb-0">Zaměstnanci *</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="pridatZamestnance()">
+                            <i class="fas fa-plus"></i> Přidat zaměstnance
+                        </button>
+                    </div>
+                    <div id="zamestnanci-container">
+                        {% if aktualni_zamestnanci %}
+                            {% for zam in aktualni_zamestnanci %}
+                            <div class="zamestnanec-row card mb-2 p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Zaměstnanec *</label>
+                                        <select class="form-select form-select-sm" name="zamestnanec_id[]" required>
+                                            <option value="">-- Vyberte --</option>
+                                            {% for zamestnanec in zamestnanci %}
+                                            <option value="{{ zamestnanec.id }}" {% if zam.zamestnanec_id == zamestnanec.id %}selected{% endif %}>
+                                                {{ zamestnanec.jmeno_plne }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Hodina od *</label>
+                                        <select class="form-select form-select-sm" name="hodina_od[]" required>
+                                            {% for hodina in hodiny %}
+                                            <option value="{{ hodina }}" {% if zam.hodina_od == hodina %}selected{% endif %}>{{ hodina }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Hodina do *</label>
+                                        <select class="form-select form-select-sm" name="hodina_do[]" required>
+                                            {% for hodina in hodiny %}
+                                            <option value="{{ hodina }}" {% if zam.hodina_do == hodina %}selected{% endif %}>{{ hodina }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="odstranitZamestnance(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- První řádek zaměstnance -->
+                            <div class="zamestnanec-row card mb-2 p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Zaměstnanec *</label>
+                                        <select class="form-select form-select-sm" name="zamestnanec_id[]" required>
+                                            <option value="">-- Vyberte --</option>
+                                            {% for zamestnanec in zamestnanci %}
+                                            <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Hodina od *</label>
+                                        <select class="form-select form-select-sm" name="hodina_od[]" required>
+                                            {% for hodina in hodiny %}
+                                            <option value="{{ hodina }}" {% if hodina == '08:00' %}selected{% endif %}>{{ hodina }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Hodina do *</label>
+                                        <select class="form-select form-select-sm" name="hodina_do[]" required>
+                                            {% for hodina in hodiny %}
+                                            <option value="{{ hodina }}" {% if hodina == '16:00' %}selected{% endif %}>{{ hodina }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="odstranitZamestnance(this)" style="display: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="poznamka" class="form-label">Poznámka</label>
+                    <textarea class="form-control" id="poznamka" name="poznamka" rows="3">{{ template.poznamka or '' }}</textarea>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.spravce') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Uložit změny
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function pridatZamestnance() {
+    const container = document.getElementById('zamestnanci-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'zamestnanec-row card mb-2 p-3';
+    newRow.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small">Zaměstnanec *</label>
+                <select class="form-select form-select-sm" name="zamestnanec_id[]" required>
+                    <option value="">-- Vyberte --</option>
+                    {% for zamestnanec in zamestnanci %}
+                    <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Hodina od *</label>
+                <select class="form-select form-select-sm" name="hodina_od[]" required>
+                    {% for hodina in hodiny %}
+                    <option value="{{ hodina }}" {% if hodina == '08:00' %}selected{% endif %}>{{ hodina }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Hodina do *</label>
+                <select class="form-select form-select-sm" name="hodina_do[]" required>
+                    {% for hodina in hodiny %}
+                    <option value="{{ hodina }}" {% if hodina == '16:00' %}selected{% endif %}>{{ hodina }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="odstranitZamestnance(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(newRow);
+    updateDeleteButtons();
+}
+
+function odstranitZamestnance(button) {
+    const row = button.closest('.zamestnanec-row');
+    row.remove();
+    updateDeleteButtons();
+}
+
+function updateDeleteButtons() {
+    const rows = document.querySelectorAll('.zamestnanec-row');
+    rows.forEach((row, index) => {
+        const deleteBtn = row.querySelector('button[onclick*="odstranitZamestnance"]');
+        if (deleteBtn) {
+            deleteBtn.style.display = rows.length > 1 ? 'block' : 'none';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateDeleteButtons();
+});
+</script>
+{% endblock %}

@@ -368,3 +368,11 @@ MIT License - Všechny práva vyhrazena © 2024 Městská knihovna Polička
 ## 👨‍💻 Autor
 
 Vytvořeno jako interní nástroj pro Městskou knihovnu Polička
+
+
+## 🚀 Rychlý start (deployment)
+- První nasazení: `./first_deploy.sh`
+- Aktualizace: `./deploy.sh`
+- Záloha DB: `./backup_database.sh`
+- Obnova DB: `./restore_database.sh`
+- Podrobný návod: `DEPLOYMENT.md`

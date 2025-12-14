@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Stránka nenalezena{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 text-center">
+            <h1 class="display-1">404</h1>
+            <h2 class="mb-4">Stránka nenalezena</h2>
+            <p class="mb-4">Omlouváme se, ale požadovaná stránka neexistuje.</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-home"></i> Zpět na úvod
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Rozpočet - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-wallet"></i> Rozpočet - {{ hlavni_rozpocet.nazev }}
+            </h1>
+            <p class="text-muted">Rok {{ hlavni_rozpocet.rok }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group-vertical d-md-inline-flex" role="group">
+                <a href="{{ url_for('budget.mesicni_stav') }}" class="btn btn-info mb-2 mb-md-0">
+                    <i class="fas fa-calendar-check"></i> Měsíční stav
+                </a>
+                <a href="{{ url_for('budget.mesicni_prehledy') }}" class="btn btn-info mb-2 mb-md-0">
+                    <i class="fas fa-chart-line"></i> Měsíční přehledy
+                </a>
+            </div>
+            <div class="btn-group-vertical d-md-inline-flex ms-md-2" role="group">
+                <a href="{{ url_for('budget.seznam_polozek') }}" class="btn btn-primary mb-2 mb-md-0">
+                    <i class="fas fa-list"></i> Seznam položek
+                </a>
+                <a href="{{ url_for('budget.pridat_polozku') }}" class="btn btn-success mb-2 mb-md-0">
+                    <i class="fas fa-plus"></i> Přidat položku
+                </a>
+                <a href="{{ url_for('budget.novy_vydaj') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-money-bill"></i> Přidat výdaj
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hlavní přehled -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-pie"></i> Celkový přehled
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Celkový rozpočet</h6>
+                            <h3 class="text-primary">{{ "{:,.2f}".format(hlavni_rozpocet.castka_celkem_float) }} Kč</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Celkové výdaje</h6>
+                            <h3 class="text-danger">{{ "{:,.2f}".format(hlavni_rozpocet.celkove_vydaje) }} Kč</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Zbývá</h6>
+                            <h3 class="{% if hlavni_rozpocet.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "{:,.2f}".format(hlavni_rozpocet.zbytek) }} Kč
+                            </h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Čerpání</h6>
+                            <h3>{{ "%.1f"|format(hlavni_rozpocet.procento_vycerpano) }}%</h3>
+                            <div class="progress mt-2" style="height: 25px;">
+                                {% set procento = hlavni_rozpocet.procento_vycerpano %}
+                                <div class="progress-bar 
+                                    {% if procento <= 50 %}bg-success
+                                    {% elif procento <= 80 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    style="width: {{ min(100, procento) }}%">
+                                    <strong>{{ "%.1f"|format(procento) }}%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if overview %}
+    <!-- Rozpis podle kategorií -->
+    <div class="row mb-4">
+        {% for kat_data in overview.kategorie %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header" style="background-color: {{ kat_data.kategorie.barva }}; color: white;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tag"></i> {{ kat_data.kategorie.nazev }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="text-danger">{{ "{:,.2f}".format(kat_data.vydaje) }} Kč</h4>
+                    
+                    {% if kat_data.podkategorie %}
+                        <hr>
+                        <h6>Podkategorie:</h6>
+                        <ul class="list-unstyled">
+                            {% for sub_data in kat_data.podkategorie %}
+                            <li>
+                                <strong>{{ sub_data.podkategorie.nazev }}</strong>: 
+                                {{ "{:,.2f}".format(sub_data.vydaje) }} Kč
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    
+                    <hr>
+                    <a href="{{ url_for('budget.nova_podkategorie', category_id=kat_data.kategorie.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus"></i> Přidat podkategorii
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <!-- Mzdové náklady detail -->
+    {% if overview.mzdove_vydaje %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users"></i> Mzdové náklady - detail
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for mzd_data in overview.mzdove_vydaje %}
+                        <h6>{{ mzd_data.kategorie.nazev }}</h6>
+                        <p><strong>Celkem:</strong> {{ "{:,.2f}".format(mzd_data.celkem) }} Kč</p>
+                        {% if mzd_data.by_personnel %}
+                            <ul>
+                                {% for personnel_id, castka in mzd_data.by_personnel.items() %}
+                                <li>Personální záznam ID {{ personnel_id }}: {{ "{:,.2f}".format(castka) }} Kč</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <hr>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Rychlé akce -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Rychlé akce
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('budget.seznam_polozek') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> Seznam položek
+                    </a>
+                    <a href="{{ url_for('budget.pridat_polozku') }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus"></i> Přidat položku
+                    </a>
+                    <a href="{{ url_for('budget.novy_vydaj') }}" class="btn btn-outline-danger">
+                        <i class="fas fa-money-bill"></i> Nový výdaj
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Další roky -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Další roky
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Správa rozpočtů pro další roky (minulost i budoucnost)</p>
+                    <a href="{{ url_for('budget.dalsi_roky') }}" class="btn btn-primary">
+                        <i class="fas fa-calendar"></i> Správa rozpočtů podle roku
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

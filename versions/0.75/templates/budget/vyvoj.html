@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Modul Rozpočet - Ve vývoji{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="fas fa-tools"></i> Modul Rozpočet - Ve vývoji
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> Co se připravuje:</h5>
+                        <ul>
+                            <li>✅ Flexibilní systém s více rozpočty</li>
+                            <li>✅ Editovatelné kategorie</li>
+                            <li>✅ Jednoduché přidávání řádků rozpočtu</li>
+                            <li>✅ Propojení s projekty</li>
+                            <li>✅ Měsíční hlídání rozpočtu</li>
+                            <li>✅ Přehledný dashboard</li>
+                            <li>✅ Reporty</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-lightbulb"></i> Nová struktura:</h5>
+                        <p><strong>Rozpočty</strong> - více rozpočtů (hlavní, projektové, roční, měsíční)</p>
+                        <p><strong>Kategorie</strong> - editovatelné kategorie pro organizaci</p>
+                        <p><strong>Rozpočtové položky</strong> - řádky v rozpočtu s kategoriemi</p>
+                        <p><strong>Výdaje</strong> - univerzální výdaje (běžné, mzdy, projektové)</p>
+                        <p><strong>Měsíční přehledy</strong> - automatické hlídání po měsících</p>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Zpět na hlavní stránku
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

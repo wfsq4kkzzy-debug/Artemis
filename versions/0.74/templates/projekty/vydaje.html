@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Výdaje - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-money-bill"></i> Výdaje: {{ projekt.nazev }}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Zpět
+            </a>
+        </div>
+    </div>
+
+    <!-- Přehled rozpočtu -->
+    {% if budget_info and budget_info.get('success') %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Rozpočet</h6>
+                            <h4 class="text-primary">{{ "{:,.2f}".format(budget_info.rozpocet) }} Kč</h4>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Vydaje</h6>
+                            <h4 class="text-danger">{{ "{:,.2f}".format(budget_info.vydaje) }} Kč</h4>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Zbývá</h6>
+                            <h4 class="{% if budget_info.zbytek < 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "{:,.2f}".format(budget_info.zbytek) }} Kč
+                            </h4>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Čerpání</h6>
+                            <h4>{{ "%.1f"|format(budget_info.procento_vycerpano) }}%</h4>
+                            <div class="progress mt-2" style="height: 8px;">
+                                {% set procento = budget_info.procento_vycerpano %}
+                                <div class="progress-bar 
+                                    {% if procento <= 50 %}bg-success
+                                    {% elif procento <= 80 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    style="width: {{ min(100, procento) }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Formulář pro přidání výdaje -->
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus"></i> Přidat výdaj
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">
+                                Popis výdaje <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="popis" 
+                                   name="popis" 
+                                   placeholder="Např. Nákup materiálu, Služby, atd."
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="castka" class="form-label">
+                                Částka (Kč) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="castka" 
+                                   name="castka" 
+                                   step="0.01" 
+                                   min="0.01"
+                                   placeholder="0.00"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="datum" class="form-label">Datum výdaje</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="datum" 
+                                   name="datum"
+                                   value="{{ now.strftime('%Y-%m-%d') }}">
+                            <small class="form-text text-muted">Pokud není zadáno, použije se aktuální datum</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cis_faktury" class="form-label">Číslo faktury</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="cis_faktury" 
+                                   name="cis_faktury"
+                                   placeholder="Volitelné">
+                        </div>
+                        <div class="mb-3">
+                            <label for="dodavatel" class="form-label">Dodavatel</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="dodavatel" 
+                                   name="dodavatel"
+                                   placeholder="Volitelné">
+                        </div>
+                        <div class="mb-3">
+                            <label for="poznamka" class="form-label">Poznámka</label>
+                            <textarea class="form-control" 
+                                      id="poznamka" 
+                                      name="poznamka" 
+                                      rows="2"
+                                      placeholder="Volitelné poznámky"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-plus"></i> Přidat výdaj
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seznam výdajů -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Seznam výdajů ({{ expenses|length }})
+                    </h5>
+                    <a href="{{ url_for('projects.rozpocet', projekt_id=projekt.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-calculator"></i> Rozpočet
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if expenses %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Popis</th>
+                                        <th class="text-end">Částka</th>
+                                        <th class="text-center">Akce</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for e in expenses %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ e.datum[:10] if e.datum else '-' }}</small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ e.popis }}</strong>
+                                            {% if e.dodavatel %}
+                                                <br><small class="text-muted">{{ e.dodavatel }}</small>
+                                            {% endif %}
+                                            {% if e.cis_faktury %}
+                                                <br><small class="badge bg-info">{{ e.cis_faktury }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-danger">{{ "{:,.2f}".format(e.castka) }} Kč</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('projects.upravit_vydaj', projekt_id=projekt.id, vydaj_id=e.id) }}" 
+                                                   class="btn btn-outline-warning" 
+                                                   title="Upravit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="POST" 
+                                                      action="{{ url_for('projects.smazat_vydaj', projekt_id=projekt.id, vydaj_id=e.id) }}" 
+                                                      style="display:inline;"
+                                                      onsubmit="return confirm('Opravdu chcete smazat výdaj \'{{ e.popis }}\'?');">
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-danger" 
+                                                            title="Smazat">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-light">
+                                        <th colspan="2" class="text-end">Celkem:</th>
+                                        <th class="text-end text-danger">
+                                            {{ "{:,.2f}".format(expenses|sum(attribute='castka')) }} Kč
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Zatím nejsou žádné výdaje.</p>
+                            <p>Přidejte první výdaj pomocí formuláře vlevo.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

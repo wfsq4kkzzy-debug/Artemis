@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Pozvat uživatele - {{ projekt.nazev }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 h-md-2">
+                <i class="fas fa-user-plus"></i> Pozvat uživatele do projektu: {{ projekt.nazev }}
+            </h1>
+            <p class="text-muted">Pozvěte uživatele do projektu a nastavte oprávnění</p>
+        </div>
+    </div>
+
+    <!-- Formulář pro sdílení -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-plus"></i> Pozvat uživatele
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="shared_with_user_id" class="form-label">Uživatel <span class="text-danger">*</span></label>
+                            <select class="form-select" id="shared_with_user_id" name="shared_with_user_id" required>
+                                <option value="">-- Vyberte uživatele --</option>
+                                {% for uzivatel in uzivatele %}
+                                <option value="{{ uzivatel.id }}">
+                                    {{ uzivatel.jmeno_prijmeni }} ({{ uzivatel.username }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="permission" class="form-label">Oprávnění <span class="text-danger">*</span></label>
+                            <select class="form-select" id="permission" name="permission" required>
+                                <option value="read">Jen zobrazení (read)</option>
+                                <option value="write">Zobrazení a úprava (write)</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                <strong>Jen zobrazení:</strong> Uživatel může projekt pouze prohlížet<br>
+                                <strong>Zobrazení a úprava:</strong> Uživatel může projekt upravovat
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="poznamka" class="form-label">Poznámka</label>
+                            <textarea class="form-control" id="poznamka" name="poznamka" rows="3" 
+                                      placeholder="Volitelná poznámka k sdílení..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Pozvat uživatele
+                            </button>
+                            <a href="{{ url_for('projects.detail', projekt_id=projekt.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seznam aktuálních sdílení -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users"></i> Pozvaní uživatelé
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if shares %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Uživatel</th>
+                                    <th>Oprávnění</th>
+                                    <th>Datum sdílení</th>
+                                    <th>Poznámka</th>
+                                    <th class="text-center">Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for share in shares %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {% if share.shared_with_user %}
+                                                {% set user_data = share.shared_with_user %}
+                                                {{ user_data.get('jmeno_prijmeni', user_data.get('username', 'Neznámý uživatel')) }}
+                                            {% else %}
+                                                Neznámý uživatel
+                                            {% endif %}
+                                        </strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if share.shared_with_user %}
+                                                {{ share.shared_with_user.get('username', '') }}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if share.permission == 'write' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-edit"></i> Úprava
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-eye"></i> Zobrazení
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ share.datum_sdileni[:10] if share.datum_sdileni else 'Neznámé' }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ share.poznamka or '-' }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <form method="POST" action="{{ url_for('projects.zrusit_sdileni', projekt_id=projekt.id, share_id=share.id) }}" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Opravdu chcete zrušit sdílení s tímto uživatelem?');">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-times"></i> Zrušit
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Projekt zatím není sdílen s žádným uživatelem.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

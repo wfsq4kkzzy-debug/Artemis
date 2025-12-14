@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Vyměnit blok rotujících služeb{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1><i class="fas fa-exchange-alt"></i> Vyměnit blok rotujících služeb</h1>
+            <p class="text-muted">Vyměňte blok služeb (pátek+sobota) s jiným blokem</p>
+            
+            <div class="alert alert-info">
+                <strong>Blok k výměně:</strong><br>
+                <strong>Pátek:</strong> {{ patek_datum.strftime('%d.%m.%Y') }} ({{ sluzba_patek.hodina_od }} - {{ sluzba_patek.hodina_do }})<br>
+                <strong>Sobota:</strong> {{ sobota_datum.strftime('%d.%m.%Y') }} ({% if sluzba_sobota %}{{ sluzba_sobota.hodina_od }} - {{ sluzba_sobota.hodina_do }}{% else %}Nepřiřazeno{% endif %})<br>
+                <strong>Zaměstnanec:</strong> {{ sluzba_patek.zamestnanec.jmeno_plne if sluzba_patek.zamestnanec else 'Nepřiřazeno' }}
+            </div>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="druhy_patek_datum" class="form-label">Vyberte blok, se kterým chcete vyměnit *</label>
+                    <select class="form-select" id="druhy_patek_datum" name="druhy_patek_datum" required>
+                        <option value="">-- Vyberte blok --</option>
+                        {% for blok in vsechny_bloky %}
+                        <option value="{{ blok.patek_datum.isoformat() }}">
+                            {{ blok.patek_datum.strftime('%d.%m.%Y') }} (pátek) - {{ blok.sobota_datum.strftime('%d.%m.%Y') }} (sobota) - 
+                            {{ blok.zamestnanec.jmeno_plne if blok.zamestnanec else 'Nepřiřazeno' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('services.spravce_rotujici', rok=patek_datum.year) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Zrušit
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-exchange-alt"></i> Vyměnit bloky
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

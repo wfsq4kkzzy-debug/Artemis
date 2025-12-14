@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Nová podkategorie{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-tags"></i> Vytvořit novou podkategorii
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Kategorie:</strong> {{ category.nazev }} ({{ category.typ }})
+                    </div>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="nazev" class="form-label">
+                                Název podkategorie <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nazev" name="nazev" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="kod" class="form-label">Kód podkategorie</label>
+                            <input type="text" class="form-control" id="kod" name="kod" maxlength="20">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis</label>
+                            <textarea class="form-control" id="popis" name="popis" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-info btn-lg">
+                                <i class="fas fa-save"></i> Vytvořit podkategorii
+                            </button>
+                            <a href="{{ url_for('budget.index') }}" class="btn btn-outline-secondary">
+                                Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

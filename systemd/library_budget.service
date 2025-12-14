@@ -1,0 +1,15 @@
+[Unit]
+Description=Library Budget Flask App
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/library_budget
+Environment="PATH=/opt/library_budget/.venv/bin"
+EnvironmentFile=/opt/library_budget/.env
+ExecStart=/opt/library_budget/.venv/bin/python /opt/library_budget/run.py
+Restart=on-failure
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

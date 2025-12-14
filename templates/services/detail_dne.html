@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Detail dne - {{ datum.strftime('%d.%m.%Y') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .service-card {
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+    .service-card.vynimka {
+        border-left-color: #ffc107;
+    }
+    .service-card.vymena {
+        border-left-color: #28a745;
+    }
+    .day-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="day-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1><i class="fas fa-calendar-day"></i> {{ den_nazev }}, {{ datum.strftime('%d.%m.%Y') }}</h1>
+                        <p class="mb-0">Správa služeb, výjimky a výměny</p>
+                    </div>
+                    <a href="{{ url_for('services.index') }}" class="btn btn-light">
+                        <i class="fas fa-arrow-left"></i> Zpět na kalendář
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nevyřízené výměny pro tento den -->
+    {% if vymeny_dne %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Nevyřízené výměny</h5>
+                </div>
+                <div class="card-body">
+                    {% for vymena in vymeny_dne %}
+                    {% if not vymena.schvaleno %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <strong>Služba 1:</strong><br>
+                                    {{ vymena.sluzba1.datum.strftime('%d.%m.%Y') }} - {{ vymena.sluzba1.oddeleni }}<br>
+                                    <small>{{ vymena.zamestnanec1.jmeno_plne if vymena.zamestnanec1 else 'Neznámý' }}</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <i class="fas fa-exchange-alt fa-2x text-muted"></i>
+                                </div>
+                                <div class="col-md-5">
+                                    <strong>Služba 2:</strong><br>
+                                    {{ vymena.sluzba2.datum.strftime('%d.%m.%Y') }} - {{ vymena.sluzba2.oddeleni }}<br>
+                                    <small>{{ vymena.zamestnanec2.jmeno_plne if vymena.zamestnanec2 else 'Neznámý' }}</small>
+                                </div>
+                            </div>
+                            {% if vymena.poznamka %}
+                            <p class="mt-2 mb-0"><small>{{ vymena.poznamka }}</small></p>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('services.schvalit_vymena', vymena_id=vymena.id) }}" class="mt-2">
+                                <input type="hidden" name="datum_str" value="{{ datum_str }}">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i> Schválit výměnu
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Služby tohoto dne -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Služby tohoto dne</h5>
+                </div>
+                <div class="card-body">
+                    {% if sluzby_dne %}
+                    {% for sluzba in sluzby_dne %}
+                    {% set vynimka = vynimky_dne|selectattr('sluzba_id', 'equalto', sluzba.id)|first %}
+                    <div class="card service-card {% if vynimka %}vynimka{% elif sluzba.je_vymena %}vymena{% endif %} mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>
+                                        {% if sluzba.oddeleni == 'detske' %}Dětské oddělení
+                                        {% elif sluzba.oddeleni == 'dospělé' %}Dospělé oddělení
+                                        {% else %}{{ sluzba.oddeleni }}{% endif %}
+                                    </h6>
+                                    <p class="mb-1">
+                                        <strong>Čas:</strong> 
+                                        {% if vynimka %}{{ vynimka.hodina_od }} - {{ vynimka.hodina_do }}
+                                        {% else %}{{ sluzba.hodina_od }} - {{ sluzba.hodina_do }}{% endif %}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>Zaměstnanec:</strong> 
+                                        {% if vynimka %}{{ vynimka.zamestnanec.jmeno_plne if vynimka.zamestnanec else 'Neznámý' }}
+                                        {% else %}{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }}{% endif %}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>Typ:</strong> 
+                                        {% if sluzba.typ == 'fixni' %}<span class="badge bg-success">Fixní</span>
+                                        {% elif sluzba.typ == 'rotujici' %}<span class="badge bg-warning text-dark">Rotující</span>
+                                        {% elif sluzba.typ == 'nedele' %}<span class="badge bg-danger">Neděle</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if vynimka %}
+                                    <span class="badge bg-warning text-dark">Výjimka</span>
+                                    {% if vynimka.poznamka %}
+                                    <p class="mt-2 mb-0"><small class="text-muted">{{ vynimka.poznamka }}</small></p>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% if sluzba.je_vymena %}
+                                    <span class="badge bg-success">Výměna</span>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <div class="d-flex gap-2">
+                                        {% if vynimka %}
+                                        <form method="POST" action="{{ url_for('services.smazat_vynimka', vynimka_id=vynimka.id) }}" 
+                                              onsubmit="return confirm('Opravdu chcete smazat tuto výjimku?');" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-trash"></i> Smazat výjimku
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('services.smazat_sluzbu', sluzba_id=sluzba.id) }}" 
+                                              onsubmit="return confirm('Opravdu chcete smazat tuto službu? (např. státní svátek)');" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash-alt"></i> Smazat službu
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">V tento den nejsou žádné služby.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Přidat výjimku -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Přidat výjimku</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('services.novy_vynimka') }}">
+                        <input type="hidden" name="datum" value="{{ datum_str }}">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Služba *</label>
+                                <select class="form-select" name="sluzba_id" required>
+                                    <option value="">-- Vyberte službu --</option>
+                                    {% for sluzba in sluzby_dne %}
+                                    <option value="{{ sluzba.id }}">
+                                        {{ sluzba.oddeleni }} - {{ sluzba.hodina_od }} - {{ sluzba.hodina_do }} 
+                                        ({{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Oddělení *</label>
+                                <select class="form-select" name="oddeleni" required>
+                                    <option value="detske">Dětské</option>
+                                    <option value="dospělé">Dospělé</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Od *</label>
+                                <select class="form-select" name="hodina_od" required>
+                                    {% for hodina in hodiny %}
+                                    <option value="{{ hodina }}">{{ hodina }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Do *</label>
+                                <select class="form-select" name="hodina_do" required>
+                                    {% for hodina in hodiny %}
+                                    <option value="{{ hodina }}">{{ hodina }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Zaměstnanec *</label>
+                                <select class="form-select" name="zamestnanec_id" required>
+                                    <option value="">-- Vyberte --</option>
+                                    {% for zamestnanec in zamestnanci %}
+                                    <option value="{{ zamestnanec.id }}">{{ zamestnanec.jmeno_plne }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Poznámka</label>
+                                <input type="text" class="form-control" name="poznamka" placeholder="Volitelné">
+                            </div>
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Přidat výjimku
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Přidat výměnu -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Přidat výměnu</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('services.novy_vymena') }}">
+                        <input type="hidden" name="datum_str" value="{{ datum_str }}">
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label">Služba 1 (z tohoto dne) *</label>
+                                <select class="form-select" name="sluzba1_id" required>
+                                    <option value="">-- Vyberte službu --</option>
+                                    {% for sluzba in sluzby_dne %}
+                                    <option value="{{ sluzba.id }}">
+                                        {{ sluzba.oddeleni }} - {{ sluzba.hodina_od }} - {{ sluzba.hodina_do }} 
+                                        ({{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label">Služba 2 (vyměnit za službu 1) *</label>
+                                <select class="form-select" name="sluzba2_id" required>
+                                    <option value="">-- Vyberte službu --</option>
+                                    {% for sluzba in vsechny_sluzby %}
+                                    <option value="{{ sluzba.id }}">
+                                        {{ sluzba.datum.strftime('%d.%m.%Y') }} - {{ sluzba.oddeleni }} - {{ sluzba.hodina_od }} - {{ sluzba.hodina_do }} 
+                                        ({{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Neznámý' }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label">Poznámka</label>
+                                <input type="text" class="form-control" name="poznamka" placeholder="Volitelné">
+                            </div>
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-exchange-alt"></i> Vytvořit výměnu
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

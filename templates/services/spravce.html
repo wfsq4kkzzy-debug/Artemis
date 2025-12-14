@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Správce služeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-cog"></i> Správce služeb</h1>
+            <p class="text-muted">Správa všech typů služeb</p>
+        </div>
+    </div>
+
+    <!-- Akce -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Správa služeb</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('services.novy_fixni') }}" class="btn btn-success w-100">
+                                <i class="fas fa-plus"></i> Nová fixní služba
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('services.spravce_rotujici') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-sync-alt"></i> Správa rotujících služeb
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('services.spravce_nedele') }}" class="btn btn-danger w-100">
+                                <i class="fas fa-calendar-day"></i> Správa nedělí
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('services.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Zpět na kalendář
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixní služby -->
+    {% if fixni %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3><i class="fas fa-calendar-check"></i> Fixní služby</h3>
+            <p class="text-muted">Fixní služby se opakují každý týden podle nastavení.</p>
+        </div>
+        {% for template in fixni %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-calendar-check"></i> Fixní služba</h6>
+                </div>
+                <div class="card-body">
+                    <h5>{{ template.nazev }}</h5>
+                    <p class="mb-1">
+                        <strong>Oddělení:</strong> 
+                        {% if template.oddeleni == 'detske' %}Dětské
+                        {% elif template.oddeleni == 'dospělé' %}Dospělé
+                        {% else %}{{ template.oddeleni }}{% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Den:</strong> 
+                        {% if template.den_v_tydnu == 0 %}Pondělí
+                        {% elif template.den_v_tydnu == 2 %}Středa
+                        {% elif template.den_v_tydnu == 3 %}Čtvrtek
+                        {% elif template.den_v_tydnu == 4 %}Pátek
+                        {% elif template.den_v_tydnu == 5 %}Sobota
+                        {% elif template.den_v_tydnu == 6 %}Neděle
+                        {% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Hodiny:</strong> {{ template.get('hodina_od', '08:00') }} - {{ template.get('hodina_do', '16:00') }}
+                    </p>
+                    {% if template.fixni_zamestnanci_list %}
+                    <p class="mb-1">
+                        <strong>Zaměstnanci:</strong> {{ template.fixni_zamestnanci_list|length }}
+                    </p>
+                    {% elif template.zamestnanec %}
+                    <p class="mb-1">
+                        <strong>Zaměstnanec:</strong> {{ template.zamestnanec.jmeno_plne }}
+                    </p>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('services.upravit_fixni', template_id=template.id) }}" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-edit"></i> Upravit
+                        </a>
+                        <form method="POST" action="{{ url_for('services.smazat_template', template_id=template.id) }}" 
+                              onsubmit="return confirm('Opravdu chcete smazat šablonu \'{{ template.nazev }}\'?');" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i> Smazat
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Rotující služby -->
+    {% if rotujici %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3><i class="fas fa-sync-alt"></i> Rotující služby</h3>
+            <p class="text-muted">Každá služba (pátek i sobota) je samostatná. Pro správu rotujících služeb a přiřazení zaměstnanců použijte <a href="{{ url_for('services.spravce_rotujici') }}">Správu rotujících služeb</a>.</p>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Den</th>
+                            <th>Čas</th>
+                            <th>Zaměstnanec</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sluzba in rotujici %}
+                        <tr>
+                            <td><strong>{{ sluzba.datum.strftime('%d.%m.%Y') }}</strong></td>
+                            <td>{{ sluzba.den_nazev }}</td>
+                            <td>{{ sluzba.hodina_od }} - {{ sluzba.hodina_do }}</td>
+                            <td>{{ sluzba.zamestnanec.jmeno_plne if sluzba.zamestnanec else 'Nepřiřazeno' }}</td>
+                            <td>
+                                <a href="{{ url_for('services.vymenit_rotujici_sluzbu', sluzba_id=sluzba.id) }}" 
+                                   class="btn btn-sm btn-outline-warning" title="Vyměnit službu">
+                                    <i class="fas fa-exchange-alt"></i> Vyměnit
+                                </a>
+                                <a href="{{ url_for('services.zmenit_rotujici_sluzbu', sluzba_id=sluzba.id) }}" 
+                                   class="btn btn-sm btn-outline-info" title="Změnit zaměstnance">
+                                    <i class="fas fa-user-edit"></i> Změnit
+                                </a>
+                                <a href="{{ url_for('services.log_sluzby', sluzba_id=sluzba.id) }}" 
+                                   class="btn btn-sm btn-outline-secondary" title="Log služby">
+                                    <i class="fas fa-history"></i> Log
+                                </a>
+                                <form method="POST" action="{{ url_for('services.smazat_sluzbu', sluzba_id=sluzba.id) }}" 
+                                      onsubmit="return confirm('Opravdu chcete smazat tuto službu?');" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Smazat službu">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Nedělní služby -->
+    {% if nedelni %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3><i class="fas fa-calendar-day"></i> Nedělní služby</h3>
+            <p class="text-muted">Pro správu nedělí a přiřazení zaměstnanců použijte <a href="{{ url_for('services.spravce_nedele') }}">Správu nedělí</a>.</p>
+        </div>
+        {% for template in nedelni %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="fas fa-calendar-day"></i> Nedělní služba</h6>
+                </div>
+                <div class="card-body">
+                    <h5>{{ template.nazev }}</h5>
+                    <p class="mb-1">
+                        <strong>Oddělení:</strong> 
+                        {% if template.oddeleni == 'detske' %}Dětské
+                        {% elif template.oddeleni == 'dospělé' %}Dospělé
+                        {% else %}{{ template.oddeleni }}{% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Hodiny:</strong> 14:00 - 17:00 (fixní)
+                    </p>
+                    {% if template.rotujici_seznam_ids %}
+                    <p class="mb-1">
+                        <strong>Zaměstnanci v rotaci:</strong> {{ template.rotujici_seznam_ids|length }}
+                    </p>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('services.spravce_nedele') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-cog"></i> Spravovat neděle
+                        </a>
+                        <form method="POST" action="{{ url_for('services.smazat_template', template_id=template.id) }}" 
+                              onsubmit="return confirm('Opravdu chcete smazat šablonu \'{{ template.nazev }}\'?');" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i> Smazat
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not fixni and not rotujici and not nedelni %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Zatím nejsou vytvořené žádné služby.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

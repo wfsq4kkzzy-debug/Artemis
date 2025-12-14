@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Nová kategorie{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-tag"></i> Vytvořit novou kategorii
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="typ" class="form-label">
+                                Typ kategorie <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="typ" name="typ" required>
+                                <option value="naklad_mzdovy">Mzdové náklady</option>
+                                <option value="naklad_ostatni">Ostatní náklady</option>
+                                <option value="vynos">Výnosy</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nazev" class="form-label">
+                                Název kategorie <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nazev" name="nazev" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="kod" class="form-label">Kód kategorie</label>
+                            <input type="text" class="form-control" id="kod" name="kod" maxlength="20">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="barva" class="form-label">Barva</label>
+                            <input type="color" class="form-control form-control-color" id="barva" name="barva" value="#007bff">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="popis" class="form-label">Popis</label>
+                            <textarea class="form-control" id="popis" name="popis" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Vytvořit kategorii
+                            </button>
+                            <a href="{{ url_for('budget.index') }}" class="btn btn-outline-secondary">
+                                Zrušit
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
