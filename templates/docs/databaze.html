@@ -29,7 +29,7 @@
                                 </tr>
                             </thead>
                     <tbody>
-                        {% for table_name in tables_info.keys()|sort(attribute='lower') %}
+                        {% for table_name in sorted_table_names %}
                         {% set count = table_counts.get(table_name, 0) %}
                         {% set module = table_name.split('_')[0] if '_' in table_name else 'core' %}
                                 <tr>
