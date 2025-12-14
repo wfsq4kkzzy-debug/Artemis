@@ -28,14 +28,43 @@ Webová aplikace pro správu rozpočtu knihovny s modulem na personální agendu
 
 ## 🛠️ Technologický stack
 
-| Komponenta | Technologie |
-|-----------|------------|
-| Backend | Flask 3.0 |
-| ORM | SQLAlchemy 2.1 |
-| Formuláře | WTForms 3.1 |
-| Frontend | Bootstrap 5 |
-| Databáze | SQLite 3 |
-| CSS | Bootstrap + Custom CSS |
+### Backend
+| Komponenta | Technologie | Verze | Účel |
+|-----------|------------|-------|------|
+| Web Framework | Flask | 3.0.0 | HTTP server, routing, request handling |
+| ORM | SQLAlchemy | >=2.0 | Databázové modely a dotazy |
+| Flask ORM | Flask-SQLAlchemy | 3.1.1 | Integrace SQLAlchemy s Flask |
+| Formuláře | WTForms | 3.1.1 | Validace formulářů |
+| Flask Formuláře | Flask-WTF | 1.2.1 | CSRF ochrana, integrace WTForms |
+| Email validace | email-validator | 2.0.0 | Validace emailových adres |
+| Konfigurace | python-dotenv | 1.0.0 | Správa proměnných prostředí (.env) |
+| AI SDK | anthropic | 0.7.1 | Claude API pro AI asistenta |
+| HTTP klient | requests | >=2.31.0 | HTTP požadavky k externím API |
+
+### Frontend
+| Komponenta | Technologie | Verze | Účel |
+|-----------|------------|-------|------|
+| CSS Framework | Bootstrap | 5.x (CDN) | Responsivní UI komponenty |
+| Ikony | Font Awesome | 6.x (CDN) | Ikony v uživatelském rozhraní |
+| JavaScript | Vanilla JS | - | Dynamické chování UI |
+
+### Databáze
+| Komponenta | Technologie | Verze | Účel |
+|-----------|------------|-------|------|
+| Databáze | SQLite | 3.x | Hlavní databáze (library_budget.db) |
+
+### Požadavky na systém
+- **Python**: 3.11+ (minimálně 3.8)
+- **OS**: Linux, macOS, Windows
+- **Paměť**: Minimálně 512 MB RAM (doporučeno 1 GB+)
+- **Disk**: Minimálně 100 MB volného místa
+
+### Kompatibilita
+- ✅ Testováno na Python 3.11, 3.12
+- ✅ Testováno na Ubuntu 20.04+, Debian 11+, macOS 10.15+, Windows 10+
+- ✅ Moderní prohlížeče (Chrome, Firefox, Safari, Edge)
+
+> 📖 **Detailní informace o technologiích a instalaci**: Viz [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## 💾 Databázové modely
 
